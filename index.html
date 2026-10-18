@@ -174,7 +174,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-var cv=$('cv'),cvWrap=$('cvWrap'),out=$('out'),chat=$('chat'),pdf=null,n=1,total=1,ctl=null,tok=0,timer=null,task=null,mode='e',docId='',fname='',zoom=1,curLibId=null;
+var cv=$('cv'),cvWrap=$('cvWrap'),out=$('out'),chat=$('chat'),pdf=null,n=1,total=1,ctl=null,tok=0,loadToken=0,timer=null,task=null,mode='e',docId='',fname='',zoom=1,curLibId=null;
 var S={};
 function normS(){S.c=S.c||{};S.q=S.q||{};S.f=S.f||[];S.sr=S.sr||{};S.w=S.w||{};S.g=S.g||{};S.n=S.n||{};S.p=S.p||{};S.exam=S.exam||'';S.pex=S.pex||''}
 normS();
@@ -189,8 +189,12 @@ if(ls('gk')||ls('ck'))$('set').open=false;
 $('gear').onclick=function(){$('set').open=!$('set').open};
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 function save(){ls('sa:'+docId,JSON.stringify(S))}
+function deckStorageKey(id){return 'sa:deck:'+id}
+function legacyStorageKey(name,blob){return 'sa:'+name+'|'+(blob?blob.size:'0')}
+function cancelAI(){if(ctl){ctl.abort();ctl=null}$('stop').hidden=true}
 
 var DB,memDecks=[],memNext=1,idbFailed=false;
+function findMemDeck(id){for(var i=0;i<memDecks.length;i++)if(memDecks[i].id===id)return memDecks[i];return null}
 function idbOpen(){
   return new Promise(function(res,rej){
     try{
@@ -205,23 +209,27 @@ function idbOpen(){
   });
 }
 function saveDeck(rec){
-  return idbOpen().then(function(db){return new Promise(function(res,rej){var tx=db.transaction('decks','readwrite'),rq=tx.objectStore('decks').add(rec);rq.onsuccess=function(){res(rq.result)};rq.onerror=function(){rej(rq.error)}})})
-  .catch(function(){idbFailed=true;var id=memNext++,r={};for(var k in rec)r[k]=rec[k];r.id=id;memDecks.push(r);return id});
+  return idbOpen().then(function(db){return new Promise(function(res,rej){var tx=db.transaction('decks','readwrite'),rq=tx.objectStore('decks').add(rec),id;rq.onsuccess=function(){id=rq.result};tx.oncomplete=function(){res(id)};tx.onerror=function(){rej(tx.error)};tx.onabort=function(){rej(tx.error)}})})
+  .catch(function(){idbFailed=true;var id='mem:'+memNext++,r={};for(var k in rec)r[k]=rec[k];r.id=id;memDecks.push(r);return id});
 }
 function updateDeck(id,patch){
-  return idbOpen().then(function(db){return new Promise(function(res,rej){var tx=db.transaction('decks','readwrite'),st=tx.objectStore('decks'),g=st.get(id);g.onsuccess=function(){var r=g.result;if(!r)return res();for(var k in patch)r[k]=patch[k];var p=st.put(r);p.onsuccess=function(){res()};p.onerror=function(){rej(p.error)}};g.onerror=function(){rej(g.error)}})})
-  .catch(function(){var r=null;for(var i=0;i<memDecks.length;i++)if(memDecks[i].id===id)r=memDecks[i];if(r)for(var k in patch)r[k]=patch[k]});
+  var mem=findMemDeck(id);if(mem){for(var mk in patch)mem[mk]=patch[mk];return Promise.resolve()}
+  return idbOpen().then(function(db){return new Promise(function(res,rej){var tx=db.transaction('decks','readwrite'),st=tx.objectStore('decks'),g=st.get(id);g.onsuccess=function(){var r=g.result;if(!r)return;for(var k in patch)r[k]=patch[k];st.put(r)};g.onerror=function(){rej(g.error)};tx.oncomplete=res;tx.onerror=function(){rej(tx.error)};tx.onabort=function(){rej(tx.error)}})})
+  .catch(function(){var r=findMemDeck(id);if(r)for(var k in patch)r[k]=patch[k]});
 }
 function getDeck(id){
+  var mem=findMemDeck(id);if(mem)return Promise.resolve(mem);
   return idbOpen().then(function(db){return new Promise(function(res,rej){var rq=db.transaction('decks','readonly').objectStore('decks').get(id);rq.onsuccess=function(){res(rq.result)};rq.onerror=function(){rej(rq.error)}})})
-  .catch(function(){for(var i=0;i<memDecks.length;i++)if(memDecks[i].id===id)return memDecks[i]});
+  .catch(function(){return findMemDeck(id)});
 }
 function deleteDeck(id){
-  return idbOpen().then(function(db){return new Promise(function(res,rej){var rq=db.transaction('decks','readwrite').objectStore('decks').delete(id);rq.onsuccess=function(){res()};rq.onerror=function(){rej(rq.error)}})})
-  .catch(function(){memDecks=memDecks.filter(function(d){return d.id!==id})});
+  if(findMemDeck(id)){memDecks=memDecks.filter(function(d){return d.id!==id});try{localStorage.removeItem(deckStorageKey(id))}catch(e){}return Promise.resolve()}
+  return idbOpen().then(function(db){return new Promise(function(res,rej){var tx=db.transaction('decks','readwrite');tx.objectStore('decks').delete(id);tx.oncomplete=res;tx.onerror=function(){rej(tx.error)};tx.onabort=function(){rej(tx.error)}})})
+  .then(function(){try{localStorage.removeItem(deckStorageKey(id))}catch(e){}})
+  .catch(function(e){if(DB)throw e;memDecks=memDecks.filter(function(d){return d.id!==id});try{localStorage.removeItem(deckStorageKey(id))}catch(x){}});
 }
 function listDecks(){
-  return idbOpen().then(function(db){return new Promise(function(res,rej){var rq=db.transaction('decks','readonly').objectStore('decks').getAll();rq.onsuccess=function(){res(rq.result||[])};rq.onerror=function(){rej(rq.error)}})})
+  return idbOpen().then(function(db){return new Promise(function(res,rej){var rq=db.transaction('decks','readonly').objectStore('decks').getAll();rq.onsuccess=function(){res((rq.result||[]).concat(memDecks))};rq.onerror=function(){rej(rq.error)}})})
   .catch(function(){return memDecks.slice()});
 }
 function fmtDate(ts){try{return new Date(ts).toLocaleDateString('tr-TR',{day:'2-digit',month:'short'})}catch(e){return ''}}
@@ -230,7 +238,7 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 async function collectAll(){
   var decks=await listDecks(),out=[];
   for(var i=0;i<decks.length;i++){
-    var d=decks[i],did=d.name+'|'+(d.blob?d.blob.size:'0'),raw=ls('sa:'+did),S2;
+    var d=decks[i],raw=ls(deckStorageKey(d.id))||ls(legacyStorageKey(d.name,d.blob)),S2;
     if(!raw)continue;try{S2=JSON.parse(raw)}catch(e){continue}
     if(!S2)continue;
     out.push({id:d.id,name:d.name,course:d.course||'',S:S2});
@@ -292,7 +300,7 @@ function mdToHtmlBody(md){
   });
   return html;
 }
-function downloadBlob(blob,filename){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove()}
+function downloadBlob(blob,filename){var url=URL.createObjectURL(blob),a=document.createElement('a');try{a.href=url;a.download=filename;document.body.appendChild(a);a.click()}finally{a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000)}}
 async function saveFile(blob,filename){
   try{
     var f=new File([blob],filename,{type:blob.type||'application/octet-stream'});
@@ -362,7 +370,7 @@ async function renderLibrary(){
     var delB=document.createElement('button');delB.textContent='🗑';delB.title='Sil';
     delB.onclick=function(){
       if(!delB.dataset.s){delB.dataset.s='1';delB.textContent='Silinsin mi?';setTimeout(function(){delB.dataset.s='';delB.textContent='🗑'},3000);return}
-      deleteDeck(it.id).then(renderLibrary);
+      deleteDeck(it.id).then(renderLibrary).catch(function(e){alert('Deste silinemedi: '+((e&&e.message)||e))});
     };
     row.appendChild(info);row.appendChild(openB);row.appendChild(delB);
     wrap.appendChild(row);
@@ -371,21 +379,25 @@ async function renderLibrary(){
 }
 
 async function loadDeck(blob,name,libId,courseVal,startPage,startMode){
-  if(bctl)bctl.abort();stopSpeak();
-  fname=name;docId=name+'|'+blob.size;curLibId=libId||null;
+  var requestToken=++loadToken;
+  if(bctl){bctl.abort();bctl=null}cancelAI();stopSpeak();
+  if(task){try{task.cancel()}catch(e){}task=null}
+  fname=name;docId=libId?'deck:'+libId:name+'|'+blob.size;curLibId=libId||null;
   if(courseVal!==undefined)$('course').value=courseVal||'';
-  try{S=JSON.parse(ls('sa:'+docId))||{}}catch(x){S={}}normS();
+  try{var saved=ls('sa:'+docId);if(!saved&&libId)saved=ls(legacyStorageKey(name,blob));S=JSON.parse(saved)||{};if(saved&&libId&&!ls('sa:'+docId))ls('sa:'+docId,saved)}catch(x){S={}}normS();
   $('exam').value=S.exam||'';
   $('empty').hidden=true;$('app').hidden=false;tok++;
   try{
-    if(/pdf/i.test(blob.type)||/\.pdf$/i.test(name)){pdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise;total=pdf.numPages}
-    else{pdf=null;total=1;var im=new Image();im.src=URL.createObjectURL(blob);await im.decode();var s=Math.min(1,1400/im.width);cv.width=im.width*s;cv.height=im.height*s;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height)}
+    pdf=null;
+    if(/pdf/i.test(blob.type)||/\.pdf$/i.test(name)){var loadedPdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise;if(requestToken!==loadToken)return;pdf=loadedPdf;total=pdf.numPages}
+    else{total=1;var im=new Image(),imgUrl=URL.createObjectURL(blob);try{im.src=imgUrl;await im.decode();if(requestToken!==loadToken)return;var s=Math.min(1,1400/im.width);cv.width=im.width*s;cv.height=im.height*s;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height)}finally{URL.revokeObjectURL(imgUrl)}}
+    if(requestToken!==loadToken)return;
     $('sl').max=total;$('jump').max=total;$('tot').textContent='/ '+total;
     if(curLibId)updateDeck(curLibId,{pages:total,opened:Date.now()}).catch(function(){});
     renderPrio();
     if(startMode&&startMode!==mode)setMode(startMode,true);
     show(Math.min(total,Math.max(1,startPage||1)));
-  }catch(err){$('app').hidden=true;$('empty').hidden=false;alert('Dosya açılamadı. Başka bir PDF veya görsel dene.');renderLibrary()}
+  }catch(err){if(requestToken!==loadToken)return;$('app').hidden=true;$('empty').hidden=false;alert('Dosya açılamadı. Başka bir PDF veya görsel dene.');renderLibrary()}
 }
 function openFromLib(id,page,m){getDeck(id).then(function(rec){if(!rec)return;loadDeck(rec.blob,rec.name,rec.id,rec.course||'',page,m)})}
 
@@ -458,17 +470,18 @@ async function callAI(turns,onText,signal){
 async function callGemini(turns,onText,signal){
   var k=$('key').value.trim();if(!k){$('set').open=true;throw {m:'Önce Gemini API anahtarını gir.'}}
   var contents=turns.map(function(t){var parts=[{text:t.text}];if(t.image)parts.push({inline_data:{mime_type:'image/jpeg',data:t.image}});return {role:t.role==='assistant'?'model':'user',parts:parts}});
-  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent($('model').value)+':streamGenerateContent?alt=sse&key='+encodeURIComponent(k),
-    {method:'POST',headers:{'Content-Type':'application/json'},signal:signal,body:JSON.stringify({contents:contents,generationConfig:{temperature:0.6}})});
+  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent($('model').value)+':streamGenerateContent?alt=sse',
+    {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},signal:signal,body:JSON.stringify({contents:contents,generationConfig:{temperature:0.6}})});
   if(!r.ok){var j={};try{j=await r.json()}catch(e){}
     var em=(j.error&&j.error.message)||'';
     throw {m:r.status===429?'Ücretsiz kota/dakika limiti doldu. Birkaç saniye bekleyip tekrar dene ('+em.slice(0,120)+')':r.status===400||r.status===403?'Anahtar veya model geçersiz olabilir: '+em.slice(0,160):'Hata '+r.status+': '+em.slice(0,160)}}
   var rd=r.body.getReader(),dec=new TextDecoder(),buf='',all='';
-  for(;;){var x=await rd.read();if(x.done)break;buf+=dec.decode(x.value,{stream:true});
-    var parts=buf.split('\n');buf=parts.pop();
-    parts.forEach(function(l){if(l.indexOf('data:')!==0)return;
-      try{var d=JSON.parse(l.slice(5)),c=d.candidates&&d.candidates[0];
-        if(c&&c.content&&c.content.parts){all+=c.content.parts.map(function(p){return p.text||''}).join('');onText(all)}}catch(e){}});
+  function consumeGeminiLine(l){if(l.indexOf('data:')!==0)return;
+    try{var d=JSON.parse(l.slice(5)),c=d.candidates&&d.candidates[0];
+      if(c&&c.content&&c.content.parts){all+=c.content.parts.map(function(p){return p.text||''}).join('');onText(all)}}catch(e){}}
+  for(;;){var x=await rd.read();buf+=dec.decode(x.value||new Uint8Array(),{stream:!x.done});
+    var parts=buf.split('\n');buf=parts.pop();parts.forEach(consumeGeminiLine);
+    if(x.done){if(buf)consumeGeminiLine(buf);break}
   }
   if(!all)throw {m:'Boş cevap geldi (içerik filtresi olabilir). Yeniden dene.'};
   return all;
@@ -477,47 +490,52 @@ async function callGemini(turns,onText,signal){
 async function callCustom(turns,onText,signal){
   var base=$('curl').value.trim().replace(/\/+$/,''),k=$('ckey').value.trim(),m=$('cmodel').value.trim();
   if(!base||!m){$('set').open=true;throw {m:'Önce API adresini ve model adını gir.'}}
-  var messages=turns.map(function(t){
-    var content=t.image?[{type:'text',text:t.text},{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+t.image}}]:t.text;
+  function makeMessages(withImages){return turns.map(function(t){
+    var content=withImages&&t.image?[{type:'text',text:t.text},{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+t.image}}]:t.text;
     return {role:t.role,content:content};
-  });
-  var r=await fetch(base+'/chat/completions',{method:'POST',signal:signal,
-    headers:Object.assign({'Content-Type':'application/json'},k?{'Authorization':'Bearer '+k}:{}),
-    body:JSON.stringify({model:m,messages:messages,stream:true,temperature:0.6})});
+  })}
+  function explainError(response,j){var em=(j.error&&(j.error.message||j.error))||'';
+    return {m:response.status===429?'Kota/dakika limiti doldu. Birkaç saniye bekleyip tekrar dene.':response.status===401||response.status===403?'Anahtar geçersiz olabilir: '+String(em).slice(0,160):response.status===404?'Model bulunamadı, model adını kontrol et: '+String(em).slice(0,160):'Hata '+response.status+': '+String(em).slice(0,160)}}
+  var headers=Object.assign({'Content-Type':'application/json'},k?{'Authorization':'Bearer '+k}:{});
+  function request(messages){return fetch(base+'/chat/completions',{method:'POST',signal:signal,headers:headers,
+    body:JSON.stringify({model:m,messages:messages,stream:true,temperature:0.6})})}
+  var hasImages=turns.some(function(t){return !!t.image}),r=await request(makeMessages(true));
   if(!r.ok){var j={};try{j=await r.json()}catch(e){}
     var em=(j.error&&(j.error.message||j.error))||'';
-    throw {m:r.status===429?'Kota/dakika limiti doldu. Birkaç saniye bekleyip tekrar dene.':r.status===401||r.status===403?'Anahtar geçersiz olabilir: '+String(em).slice(0,160):r.status===404?'Model bulunamadı, model adını kontrol et: '+String(em).slice(0,160):'Hata '+r.status+': '+String(em).slice(0,160)}}
+    if(hasImages&&(r.status===400||r.status===422)&&/(vision|image|multimodal|image_url|unsupported)/i.test(String(em))){r=await request(makeMessages(false));if(!r.ok){j={};try{j=await r.json()}catch(e){}}}
+    if(!r.ok)throw explainError(r,j)}
   var rd=r.body.getReader(),dec=new TextDecoder(),buf='',all='';
-  for(;;){var x=await rd.read();if(x.done)break;buf+=dec.decode(x.value,{stream:true});
-    var lines=buf.split('\n');buf=lines.pop();
-    for(var i=0;i<lines.length;i++){var l=lines[i];if(l.indexOf('data:')!==0)continue;var d=l.slice(5).trim();if(d==='[DONE]')continue;
-      try{var j2=JSON.parse(d),delta=j2.choices&&j2.choices[0]&&(j2.choices[0].delta||j2.choices[0].message);
-        if(delta&&delta.content){all+=delta.content;onText(all)}}catch(e){}}
+  function consumeCustomLine(l){if(l.indexOf('data:')!==0)return;var d=l.slice(5).trim();if(d==='[DONE]')return;
+    try{var j2=JSON.parse(d),delta=j2.choices&&j2.choices[0]&&(j2.choices[0].delta||j2.choices[0].message);
+      if(delta&&delta.content){all+=delta.content;onText(all)}}catch(e){}}
+  for(;;){var x=await rd.read();buf+=dec.decode(x.value||new Uint8Array(),{stream:!x.done});
+    var lines=buf.split('\n');buf=lines.pop();lines.forEach(consumeCustomLine);
+    if(x.done){if(buf)consumeCustomLine(buf);break}
   }
   if(!all)throw {m:'Boş cevap geldi. Model adını ve API adresini kontrol et.'};
   return all;
 }
 
 async function run(kind,variant){
-  if(ctl)ctl.abort();ctl=new AbortController();var page=n,sig=ctl.signal;
+  cancelAI();var requestCtl=new AbortController();ctl=requestCtl;var page=n,state=S,requestDoc=docId,viewToken=tok,sig=requestCtl.signal;
   $('stop').hidden=false;
   var text;
   if(kind==='q')text=role()+ctx()+' Bu sayfa için 3 quiz sorusu hazırla (biri kavramsal, biri örnek veya hesaplama gerektiren, biri yorum sorusu). Tam şu biçimde yaz:\nSORU 1: ...\nCEVAP: ...\nSORU 2: ...\nCEVAP: ...\nSORU 3: ...\nCEVAP: ...\n"SORU" ve "CEVAP" etiketlerini değiştirme, ama soru ve cevapların içeriğini '+langName()+' dilinde yaz. Markdown kullanma.';
   else if(kind==='t')text=role()+ctx()+' Bu sayfadaki önemli terimleri ve kavramları listele (en fazla 8). Her terimi ayrı satırda tam şu biçimde yaz:\nTERİM: slayttaki orijinal terim | '+langName()+' karşılığı | tek cümlelik sade tanım\n"TERİM:" etiketini değiştirme. Sayfada terim yoksa tek satır yaz: TERİM: - | - | Bu sayfada terim yok. Markdown kullanma.';
   else text=role()+ctx()+' '+FMT()+(variant==='deep'?'\nBu kez ÖRNEK bölümünde en az 3 farklı örnek ver (basitten zora) ve açıklamayı daha detaylı yap.':'')+(variant==='simple'?'\nBunu çok daha basit anlat: karmaşık terimlerden kaçın, kısa cümleler kullan, sanki konuyu hiç bilmeyen birine anlatıyormuşsun gibi yaz.':'');
   var draw=kind==='q'?quiz:kind==='t'?gloss:fmt;
-  var store=kind==='q'?S.q:kind==='t'?S.g:S.c;
+  var store=kind==='q'?state.q:kind==='t'?state.g:state.c;
   if(mode===kind)msg('Düşünüyor…');
   try{
-    var t=await callAI([{role:'user',text:text,image:imgB64()}],function(a){if(page===n&&mode===kind)draw(a)},sig);
-    store[page]=t;if(kind==='q')delete S.w[page];save();chips();
-    if(page===n&&mode===kind)draw(t,true);
-  }catch(e){if(!(e&&e.name==='AbortError'))if(page===n)msg((e&&e.m)||'Bağlantı hatası. İnterneti kontrol et.',true)}
-  $('stop').hidden=true;
+    var t=await callAI([{role:'user',text:text,image:imgB64()}],function(a){if(ctl===requestCtl&&!sig.aborted&&page===n&&mode===kind&&S===state&&docId===requestDoc&&tok===viewToken)draw(a)},sig);
+    if(ctl===requestCtl&&!sig.aborted&&S===state&&docId===requestDoc){store[page]=t;if(kind==='q')delete state.w[page];save();chips();
+      if(page===n&&mode===kind&&tok===viewToken)draw(t,true)}
+  }catch(e){if(!(e&&e.name==='AbortError')&&page===n&&S===state&&docId===requestDoc&&tok===viewToken)msg((e&&e.m)||'Bağlantı hatası. İnterneti kontrol et.',true)}
+  if(ctl===requestCtl){ctl=null;$('stop').hidden=true}
 }
 async function follow(q,reuseDiv,opt){
   opt=opt||{};
-  if(ctl)ctl.abort();ctl=new AbortController();var page=n;
+  cancelAI();var requestCtl=new AbortController();ctl=requestCtl;var page=n,state=S,requestDoc=docId,viewToken=tok;
   var d=reuseDiv;
   if(!d){d=document.createElement('div');d.className='qa';d.innerHTML='<b></b><p></p>';d.firstChild.textContent=opt.label||('Soru: '+q);chat.appendChild(d);try{d.scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}}
   var old=d.querySelector('.retry');if(old)old.remove();
@@ -527,17 +545,18 @@ async function follow(q,reuseDiv,opt){
   if(S.c[n]){c.push({role:'assistant',text:S.c[n]})}
   c.push({role:'user',text:q});
   try{
-    await callAI(c,function(a){if(page===n)p.textContent=a},ctl.signal);
+    await callAI(c,function(a){if(ctl===requestCtl&&!requestCtl.signal.aborted&&page===n&&S===state&&docId===requestDoc&&tok===viewToken)p.textContent=a},requestCtl.signal);
   }catch(e){
-    if(!(e&&e.name==='AbortError')){
+    if(!(e&&e.name==='AbortError')&&S===state&&docId===requestDoc&&tok===viewToken){
       p.textContent=(e&&e.m)||'Bağlantı hatası.';p.className='err';
       var rb=document.createElement('button');rb.className='retry';rb.textContent='Yeniden dene';rb.onclick=function(){follow(q,d,opt)};d.appendChild(rb);
     }
   }
+  if(ctl===requestCtl)ctl=null;
 }
 
 async function show(i){
-  i=Math.max(1,Math.min(total,i|0||1));var my=++tok;clearTimeout(timer);if(ctl)ctl.abort();
+  i=Math.max(1,Math.min(total,i|0||1));var my=++tok;clearTimeout(timer);cancelAI();
   n=i;stopSpeak();ui();chat.textContent='';view();setZoom(1);$('pnote').value=S.n[n]||'';
   if(pdf){
     if(task){try{task.cancel()}catch(e){}}
@@ -567,7 +586,7 @@ cv.addEventListener('touchend',function(e){if(e.touches.length<2)pinchD=0},{pass
 $('file').addEventListener('change',async function(e){
   var f=e.target.files[0];if(!f)return;e.target.value='';
   var libId=null;
-  try{if(window.indexedDB)libId=await saveDeck({name:f.name,course:$('course').value.trim(),mime:f.type||'',blob:f,added:Date.now(),opened:Date.now(),pages:null})}catch(err){}
+  try{libId=await saveDeck({name:f.name,course:$('course').value.trim(),mime:f.type||'',blob:f,added:Date.now(),opened:Date.now(),pages:null})}catch(err){}
   loadDeck(f,f.name,libId);
 });
 $('libBtn').onclick=function(){
@@ -594,7 +613,7 @@ $('tQ').onclick=function(){setMode('q')};
 $('tT').onclick=function(){setMode('t')};
 $('gAll').onclick=renderAllGloss;
 $('again').onclick=function(){run(mode,'normal')};$('deep').onclick=function(){run('e','deep')};$('simple').onclick=function(){run('e','simple')};
-$('stop').onclick=function(){if(ctl)ctl.abort();$('stop').hidden=true};
+$('stop').onclick=function(){cancelAI()};
 $('flag').onclick=function(){
   var i=S.f.indexOf(n);
   if(i>-1){S.f.splice(i,1);delete S.sr[n]}
@@ -612,10 +631,11 @@ $('rNo').onclick=function(){reviewAnswer(false)};
 function buildMD(){return buildDeckMD(fname,$('course').value.trim(),S)}
 $('exp').onclick=function(){
   try{
-    saveFile(new Blob([buildMD()],{type:'text/markdown'}),(fname.replace(/\.[^.]+$/,'')||'notlar')+'-notlar.md');
+    var b=this,old=b.textContent;
+    saveFile(new Blob([buildMD()],{type:'text/markdown'}),(fname.replace(/\.[^.]+$/,'')||'notlar')+'-notlar.md').catch(function(){b.textContent='İndirilemedi, "Notları kopyala" dene';setTimeout(function(){b.textContent=old},2000)});
   }catch(e){var b=this,old=b.textContent;b.textContent='İndirilemedi, "Notları kopyala" dene';setTimeout(function(){b.textContent=old},2000)}
 };
-function fallbackCopy(t){try{var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);return true}catch(e){return false}}
+function fallbackCopy(t){var ta=document.createElement('textarea');try{ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();return document.execCommand('copy')}catch(e){return false}finally{if(ta.parentNode)ta.parentNode.removeChild(ta)}}
 $('cpy').onclick=function(){
   var md=buildMD(),b=this,old=b.textContent;
   function done(ok){b.textContent=ok?'Kopyalandı ✓':'Kopyalanamadı';setTimeout(function(){b.textContent=old},1500)}
@@ -677,15 +697,17 @@ $('xlink').onclick=async function(){
 };
 
 // ---- sayfa notu
-var ntm=null;
+var ntm=Object.create(null);
 $('pnote').addEventListener('input',function(){
-  var v=this.value,pg=n;clearTimeout(ntm);
-  ntm=setTimeout(function(){if(v.trim())S.n[pg]=v;else delete S.n[pg];save()},400);
+  var v=this.value,pg=n,state=S,saveDoc=docId,key=JSON.stringify([saveDoc,pg]);
+  if(v.trim())state.n[pg]=v;else delete state.n[pg];
+  clearTimeout(ntm[key]);
+  ntm[key]=setTimeout(function(){var target=docId===saveDoc?S:state;if(target!==state){if(v.trim())target.n[pg]=v;else delete target.n[pg]}ls('sa:'+saveDoc,JSON.stringify(target));delete ntm[key]},400);
 });
 
 // ---- sınav önceliği
-var etm=null;
-$('exam').addEventListener('input',function(){S.exam=this.value;clearTimeout(etm);etm=setTimeout(save,500)});
+var etm=Object.create(null);
+$('exam').addEventListener('input',function(){var state=S,saveDoc=docId,v=this.value;state.exam=v;clearTimeout(etm[saveDoc]);etm[saveDoc]=setTimeout(function(){var target=docId===saveDoc?S:state;if(target!==state)target.exam=v;ls('sa:'+saveDoc,JSON.stringify(target));delete etm[saveDoc]},500)});
 function renderPrio(){
   var c=$('plist');c.textContent='';
   var cnt={'Yüksek':0,'Orta':0,'Düşük':0},h=[],m=[],keys=Object.keys(S.p||{}).map(Number).sort(function(a,b){return a-b});
@@ -708,11 +730,11 @@ $('pRun').onclick=async function(){
   if(!pdf){$('pstat').textContent='Bu özellik PDF dosyalarında çalışır.';return}
   var myS=S,myDoc=docId,myPdf=pdf,tot=total,ex=($('exam').value||'').trim().slice(0,6000),course=$('course').value.trim(),errMsg='',skipped=0;
   if(myS.pex!==ex){myS.p={};myS.pex=ex}
-  bctl=new AbortController();var sig=bctl.signal;
+  var requestCtl=new AbortController();bctl=requestCtl;var sig=requestCtl.signal;
   try{
     for(var p=1;p<=tot;p++){
       if(sig.aborted)throw {name:'AbortError'};
-      btn.textContent='Durdur ('+p+'/'+tot+')';
+      if(bctl===requestCtl)btn.textContent='Durdur ('+p+'/'+tot+')';
       if(myS.p[p])continue;
       var pg=await myPdf.getPage(p),tc=await pg.getTextContent();
       var txt=tc.items.map(function(x){return x.str}).join(' ').replace(/\s+/g,' ').trim().slice(0,3500);
@@ -729,7 +751,7 @@ $('pRun').onclick=async function(){
     if(e&&e.name==='AbortError')errMsg='Durduruldu. Tekrar basınca kaldığı yerden devam eder.';
     else errMsg=((e&&e.m)||'Bağlantı hatası.')+' Tekrar basınca kaldığı yerden devam eder.';
   }
-  bctl=null;btn.textContent='Tüm sayfaları analiz et';
+  if(bctl===requestCtl){bctl=null;btn.textContent='Tüm sayfaları analiz et'}
   try{localStorage.setItem('sa:'+myDoc,JSON.stringify(myS))}catch(e){}
   if(myS===S){renderPrio();ui();
     var extra=(skipped?(' '+skipped+' sayfada metin olmadığı için atlandı.'):'')+(errMsg?' '+errMsg:'');
@@ -773,7 +795,7 @@ async function runDiag(){
   dAdd(window.pdfjsLib?'ok':'bad','PDF motoru (pdf.js)',window.pdfjsLib?'yüklendi':'yüklenemedi: internet bağlantısını veya engelleyiciyi kontrol et');
   try{
     var ac=new AbortController(),to=setTimeout(function(){ac.abort()},8000);
-    var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=tanilama',{signal:ac.signal});clearTimeout(to);
+    var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers:{'x-goog-api-key':'tanilama'},signal:ac.signal});clearTimeout(to);
     dAdd('ok','Google Gemini bağlantısı','ulaşılıyor (HTTP '+r.status+'; geçersiz anahtar yanıtı beklenen durum)');
   }catch(e){dAdd('bad','Google Gemini bağlantısı','ulaşılamıyor: ağ veya uygulama engelliyor')}
   if(window.speechSynthesis&&window.SpeechSynthesisUtterance){
