@@ -15,7 +15,8 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 - **Formüller:** Açıklamalardaki formüller KaTeX ile düzgün gösterilir.
 - **Kitaplık:** Eklenen dosyalar cihazda saklanır, sonra kaldığın yerden açılır.
 - **Yedekle / Geri yükle:** Kitaplıktaki tüm slaytlar, açıklamalar, notlar, quiz'ler ve kart ilerlemesi tek bir `slaity-yedek-….json` dosyasına alınır; başka bir cihazda veya adreste geri yüklenir. API anahtarları yedeğe girmez.
-- **Mobil uyumlu:** Kaydırarak sayfa geçme, iki parmakla yakınlaştırma, sabitlenebilen slayt paneli, ana ekrana eklenebilir.
+- **Mobil uyumlu:** Kaydırarak sayfa geçme, iki parmakla yakınlaştırma, sabitlenebilen slayt paneli.
+- **Uygulama olarak:** Ana ekrana yüklenebilir (PWA) ve internetsiz açılır; Android için APK'sı da var (aşağıya bak).
 - **7 dil:** Türkçe, İngilizce, Almanca, Fransızca, İspanyolca, Rusça, Arapça.
 
 ## Kullanım
@@ -31,6 +32,14 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 ### Yayınlama (GitHub Pages)
 
 Repo ayarlarında **Settings → Pages → Deploy from a branch → `main` / root** seç. Uygulama `https://<kullanıcı>.github.io/slait/` adresinde açılır. iPhone'da Safari'den "Ana Ekrana Ekle" ile uygulama gibi kullanılabilir.
+
+## Uygulama olarak kullanma
+
+**Android (APK):** [slaity.apk](https://github.com/oguzhvn/slait/releases/download/apk/slaity.apk) dosyasını telefonda indirip aç. İlk seferde tarayıcıya "bilinmeyen uygulamaları yükleme" izni vermen gerekir. Her `main` güncellemesinde GitHub Actions yeni bir APK üretir; yenisini kurmak eskisinin üzerine yazar, verilerin kalır. Uygulama pdf.js ve KaTeX'i içinde taşır, internetsiz açılır (yapay zekâ özellikleri internet ister).
+
+**Ana ekrana yükleme (PWA):** Siteyi açtıktan sonra Android'de Chrome menüsü → **Uygulamayı yükle**, iPhone'da Safari → Paylaş → **Ana Ekrana Ekle**. Bir kez açıldıktan sonra internetsiz de açılır.
+
+> APK ile site ayrı yerlerdir; birinde oluşturduğun notlar diğerinde görünmez. Taşımak için **Yedekle / Yedeği geri yükle** kullan.
 
 ### Verileri başka bir yere taşıma
 
@@ -54,6 +63,7 @@ npm start          # http://localhost:3000
 npm install
 npx playwright install chromium   # ilk seferde
 npm test
+npm run build:www                 # Android için www/ (yerelde APK: npx cap add android && cd android && ./gradlew assembleDebug)
 ```
 
 `tests/smoke.test.js` gerçek bir yapay zekâ servisine bağlanmaz: API'yi taklit eder ve pdf.js'i `node_modules`'tan sunar.
@@ -62,6 +72,12 @@ npm test
 
 ```
 index.html                 Uygulamanın tamamı (HTML + CSS + JS)
+manifest.webmanifest, sw.js  PWA: ana ekrana yükleme ve çevrimdışı açılış
+icons/, android-res/       Web ve Android simgeleri (scripts/gen-icons.js ile üretilir)
+capacitor.config.json      Android uygulaması (Capacitor) ayarları
+scripts/build-www.js       Android için www/ klasörünü hazırlar (kütüphaneler yerel)
+android-signing/           APK imzalama anahtarı (güncellemeler üst üste kurulabilsin diye sabit)
+.github/workflows/android.yml  APK'yı derler ve "apk" sürümü olarak yayınlar
 tests/smoke.test.js        Tarayıcı testi (Playwright)
 docs/ARCHITECTURE.md       Kodun yapısı, veri modeli, depolama anahtarları
 CHANGELOG.md               Değişiklik geçmişi
