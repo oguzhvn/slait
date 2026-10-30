@@ -72,4 +72,10 @@ Her destenin durumu `S` nesnesindedir ve localStorage'da JSON olarak tutulur:
 | localStorage | `gk gm gc gl pv cu ck cm` | Ayarlar: anahtar, model, ders, dil, sağlayıcı, özel API |
 | localStorage | `pin`, `ratio` | Görünüm tercihleri |
 
+## Yedek dosyası
+
+`backupAll()` her desteyi `{name, course, mime, added, opened, pages, data, state}` olarak yazar: `data` dosyanın kendisi (data URL), `state` destenin `S` durumu. Dosya: `{app: 'slaity', v: 1, created, decks: [...]}`. Ayarlar ve API anahtarları dahil değildir.
+
+Geri yüklemede aynı ad ve boyutta bir deste zaten varsa eklenmez; o destenin burada hiç kaydı yoksa yalnızca yedekteki durum yazılır.
+
 IndexedDB çalışmazsa desteler bellekte (`memDecks`) tutulur ve kitaplıkta uyarı gösterilir. localStorage yazımı başarısız olursa (ör. kota dolduğunda) `ls()` üstte `#stWarn` uyarısını gösterir.
