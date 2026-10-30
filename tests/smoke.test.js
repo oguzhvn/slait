@@ -93,11 +93,25 @@ trailer<</Root 1 0 R>>`;
   await pg.click('#tQ');
   await pg.click('#again');
   await pg.waitForTimeout(2500);
-  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#anki')]);
-  const anki = require('fs').readFileSync(await dl.path(), 'utf8');
-  assert.match(anki, /^#separator:tab\n#html:true\n#tags column:3\n#deck:Slaity::a\n/, 'anki headers');
-  assert.match(anki, /\\\(a\+b\\\) nedir\?\tToplam\.\tslaity a sayfa2 quiz/, 'anki quiz row');
   await pg.click('#tE');
+
+  // Notes download includes the explanation.
+  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#exp')]);
+  assert.match(require('fs').readFileSync(await dl.path(), 'utf8'), /AKILDA TUT: ok/, 'explanation in notes file');
+
+  // Built-in cards: new card -> show answer -> "Tekrar" requeues it, "İyi" finishes it for a day.
+  await pg.click('#cards');
+  await pg.waitForTimeout(300);
+  assert.match(await pg.textContent('#cdStat'), /Yeni 1/);
+  await pg.keyboard.press(' ');
+  assert.deepStrictEqual(await pg.$$eval('#cdGrades small', (e) => e.map((x) => x.textContent)), ['1 dk', '10 dk', '1 gün', '4 gün']);
+  await pg.keyboard.press('1');
+  assert.match(await pg.textContent('#cdFront'), /nedir/, 'again keeps the card in the session');
+  await pg.keyboard.press(' ');
+  await pg.keyboard.press('3');
+  assert.match(await pg.textContent('#cdFront'), /Bugünlük bitti/);
+  assert.strictEqual(await pg.$eval('#cdGo', (e) => e.hidden), true);
+  await pg.keyboard.press('Escape');
 
   // Ratio buttons: two columns on desktop, one column on phones.
   await pg.click('#r5050');
