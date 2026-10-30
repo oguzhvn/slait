@@ -53,19 +53,5 @@ npm test
 index.html                 Uygulamanın tamamı (HTML + CSS + JS)
 tests/smoke.test.js        Tarayıcı testi (Playwright)
 docs/ARCHITECTURE.md       Kodun yapısı, veri modeli, depolama anahtarları
-scripts/claude-base-setup.sh  Claude Code için temel token tasarrufu kurulumu
-CLAUDE.md, .claude/        Bu repoda çalışan Claude Code oturumları için kurallar
 CHANGELOG.md               Değişiklik geçmişi
 ```
-
-## Claude Code ile çalışma
-
-Bu repo, Claude Code oturumlarında token tasarrufu için iki açık kaynak projeyi temel olarak kullanır:
-
-- [drona23/claude-token-efficient](https://github.com/drona23/claude-token-efficient): `CLAUDE.md` içindeki kısa kurallar.
-- [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (Apache-2.0): `.claude/skills/caveman/`, sohbet cevaplarını kısaltır; kod ve commit'ler normal yazılır. Kapatmak için oturumda "stop caveman" yaz.
-
-Bu ikisini **tüm projelerinde ve her yeni oturumda** kullanmak için `scripts/claude-base-setup.sh` betiğini çalıştır; `~/.claude/` altına kurar:
-
-- **Kendi bilgisayarında:** `bash scripts/claude-base-setup.sh` (bir kez).
-- **Claude Code bulut oturumlarında:** Oturum başlığındaki ortam menüsü → **Edit** → **Setup script** alanına betiğin içeriğini yapıştır. Her yeni oturum başlarken çalışır.

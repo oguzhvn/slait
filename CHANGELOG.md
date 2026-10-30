@@ -13,7 +13,6 @@
 
 ### Eklenenler
 - README, mimari belgesi, tarayıcı testi (`npm test`).
-- Claude Code için token tasarrufu kurulumu: `CLAUDE.md`, Caveman becerisi, `scripts/claude-base-setup.sh`.
 
 ## developmentv1
 - `slaity.html` → `index.html` olarak yeniden adlandırıldı.
