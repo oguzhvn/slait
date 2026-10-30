@@ -1,5 +1,13 @@
 # Değişiklik geçmişi
 
+## 2026-10-30 (2)
+
+- Uygulamanın adı **Slaity** oldu.
+- Yapay zekâya giden slayt görseli küçültülüyor (uzun kenar en fazla 1536 piksel) ve isteğin başına konuyor; sınav önceliği analizinde sabit kısım her sayfada aynı başlangıçta gönderiliyor. Amaç daha az görsel token'ı ve sağlayıcı önbelleğinden yararlanmak.
+- Uygulama içi kart sistemi (🃏 Kartları çalış): quiz soruları ve terimler, Tekrar / Zor / İyi / Kolay değerlendirmeli aralıklı tekrar kartlarına dönüşüyor. Kitaplıkta bekleyen kartlar listeleniyor.
+- "Notları indir" artık `.txt` dosyası veriyor (telefonlarda da açılır).
+- Formüller KaTeX ile gösteriliyor.
+
 ## 2026-10-30
 
 ### Düzeltmeler

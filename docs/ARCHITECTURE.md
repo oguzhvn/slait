@@ -1,6 +1,6 @@
 # Mimari
 
-Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Tek dış bağımlılık cdnjs'den yüklenen **pdf.js 3.11.174**'tür.
+Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Dış bağımlılıklar cdnjs'den yüklenir: **pdf.js 3.11.174** (zorunlu) ve **KaTeX 0.16.9** (isteğe bağlı; yüklenemezse formüller düz metin kalır).
 
 ## Akış
 
@@ -20,6 +20,31 @@ Sayfa içinde gezinme `go(i)` üzerinden yapılır; zaten açık olan sayfaya gi
 
 İstek iptali iki ayrı `AbortController` ile yönetilir: `ctl` (açıklama/quiz/terim) ve `qctl` (sorular). `cancelAI()` ikisini birden iptal eder; sayfa veya deste değişince çağrılır. Eski bir cevabın yanlış yere yazılmasını `tok`, `loadToken`, `docId` ve `S===state` kontrolleri önler.
 
+## Token tasarrufu
+
+- **Küçültülmüş görsel:** Ekrandaki kanvas 2600 piksele kadar çıkabilir; yapay zekâya giden kopyanın uzun kenarı `AI_IMG_MAX` (1536) ile sınırlanır.
+- **Önbellek dostu sıra:** Görsel her istekte metinden önce gelir, ardından sabit rol metni gelir. Aynı sayfadaki açıklama, quiz, terim ve sorular böylece aynı başlangıcı paylaşır; sağlayıcı bu ortak kısmı önbellekten sayabilir.
+- **Sınav önceliği:** Talimatlar ve sınav metni her sayfada birebir aynı başlangıçta (`head`), sayfa metni en sonda gönderilir.
+
+## Formüller
+
+İstemler formülleri `\( … \)` ve `\[ … \]` ile istemeye ayarlıdır (`MATH`). `$` kullanılmaz, çünkü finans metinlerinde para birimi olarak geçer. `math(el)` cevap tamamlandıktan sonra KaTeX auto-render çalıştırır; akış sırasında ham metin görünür.
+
+## Kartlar
+
+`deckCards(X)` bir destenin kartlarını üretir: her quiz sorusu (`q{sayfa}.{n}`) ve sözlükteki her terim (`t:{terim}`). İlerleme `S.k[kartId] = {ef, ivl, reps, lapses, due}` içinde tutulur.
+
+`sched(st, g, now)` SM-2 tabanlıdır; `g`: 0 Tekrar, 1 Zor, 2 İyi, 3 Kolay.
+
+| Durum | Tekrar | Zor | İyi | Kolay |
+|---|---|---|---|---|
+| Yeni / öğreniliyor | 1 dk | 10 dk | 1 gün | 4 gün |
+| Tekrar kartı | 10 dk (unutma sayılır) | `ivl × 1.2` | `ivl × ef` | `ivl × ef × 1.3` |
+
+`ef` 2.5'ten başlar (en az 1.3; Zor −0.15, Kolay +0.15, Tekrar −0.2), aralık en fazla 365 gün. Bir günden kısa aralık alan kart oturumda yeniden sıraya girer. Oturum, zamanı gelen kartlar ve en fazla `NEW_LIMIT` (20) yeni karttan oluşur.
+
+Quiz yeniden üretilince o sayfanın quiz kartlarının ilerlemesi silinir. Quiz'de "Bilemedim" o kartı hemen tekrar sırasına koyar. Kitaplıktan çalışırken açık destenin canlı durumu (`S`), diğer destelerin localStorage kaydı kullanılır (`cardDecks`).
+
 ## Veri modeli
 
 Her destenin durumu `S` nesnesindedir ve localStorage'da JSON olarak tutulur:
@@ -33,6 +58,7 @@ Her destenin durumu `S` nesnesindedir ve localStorage'da JSON olarak tutulur:
 | `n[p]` | Kullanıcının sayfa notu |
 | `f` | 🚩 işaretli sayfalar |
 | `sr[p]` | Aralıklı tekrar: `{step, due}` (`INT = [1,3,7,14,30]` gün) |
+| `k[id]` | Kart ilerlemesi (aşağıda Kartlar bölümüne bak) |
 | `p[p]` | Sınav önceliği: `{l: 'Yüksek'\|'Orta'\|'Düşük', r: neden}` |
 | `exam`, `pex` | Sınav metni ve son analizin hangi metinle yapıldığı |
 
