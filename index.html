@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Slaity">
 <meta name="theme-color" content="#2f6fed">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232f6fed'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='white' font-family='-apple-system,sans-serif'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Slaity</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
@@ -195,6 +196,9 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
+// Android uygulaması (Capacitor) içinde çalışırken indirme, paylaşma ve sesli okuma yerel eklentilerle yapılır.
+var CAP=window.Capacitor,NATIVE=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform()),PL={};
+function plugin(name){return PL[name]||(PL[name]=CAP.registerPlugin(name))}
 var cv=$('cv'),cvWrap=$('cvWrap'),out=$('out'),chat=$('chat'),pdf=null,n=1,total=1,ctl=null,tok=0,loadToken=0,qctl=null,timer=null,task=null,mode='e',docId='',fname='',zoom=1,curLibId=null;
 var S={};
 function normS(){S.c=S.c||{};S.q=S.q||{};S.f=S.f||[];S.sr=S.sr||{};S.w=S.w||{};S.g=S.g||{};S.n=S.n||{};S.p=S.p||{};S.k=S.k||{};S.exam=S.exam||'';S.pex=S.pex||''}
@@ -328,6 +332,11 @@ function mdToHtmlBody(md){
 }
 function downloadBlob(blob,filename){var url=URL.createObjectURL(blob),a=document.createElement('a');try{a.href=url;a.download=filename;document.body.appendChild(a);a.click()}finally{a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000)}}
 async function saveFile(blob,filename){
+  if(NATIVE){
+    var w=await plugin('Filesystem').writeFile({path:filename,data:(await blobToDataURL(blob)).split(',')[1],directory:'CACHE'});
+    try{await plugin('Share').share({title:filename,files:[w.uri]})}catch(e){if(!/cancel/i.test(String(e&&e.message)))throw e}
+    return;
+  }
   try{
     var f=new File([blob],filename,{type:blob.type||'application/octet-stream'});
     if(navigator.maxTouchPoints>1&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:filename});return}
@@ -827,12 +836,12 @@ var sx=null,sy=null;
 cv.addEventListener('touchstart',function(e){if(zoom>1||e.touches.length!==1){sx=null;return}sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
 cv.addEventListener('touchend',function(e){if(sx===null||zoom>1)return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)go(dx<0?n+1:n-1)},{passive:true});
 // ---- sesli okuma
-var speaking=false;
-function stopSpeak(){try{if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}speaking=false;var b=$('tts');if(b)b.textContent='🔊 Oku'}
+var speaking=false,spk=0;
+function stopSpeak(){spk++;try{if(NATIVE)plugin('TextToSpeech').stop().catch(function(){});else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}speaking=false;var b=$('tts');if(b)b.textContent='🔊 Oku'}
 var VL={tr:'tr-TR',en:'en-US',de:'de-DE',fr:'fr-FR',es:'es-ES',ru:'ru-RU',ar:'ar-SA'};
 $('tts').onclick=function(){
   var b=this;
-  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){b.textContent='Desteklenmiyor';setTimeout(function(){b.textContent='🔊 Oku'},1500);return}
+  if(!NATIVE&&(!window.speechSynthesis||!window.SpeechSynthesisUtterance)){b.textContent='Desteklenmiyor';setTimeout(function(){b.textContent='🔊 Oku'},1500);return}
   if(speaking){stopSpeak();return}
   var t=S.c[n];
   if(!t){b.textContent='Önce açıklama gelsin';setTimeout(function(){b.textContent='🔊 Oku'},1500);return}
@@ -841,7 +850,13 @@ $('tts').onclick=function(){
   var chunks=[],cur='';
   (clean.match(/[^.!?\n]+[.!?]*|\n/g)||[clean]).forEach(function(sn){if((cur+sn).length>220){if(cur.trim())chunks.push(cur);cur=sn}else cur+=sn});
   if(cur.trim())chunks.push(cur);
-  var code=VL[$('lang').value]||'tr-TR',vs=speechSynthesis.getVoices(),voice=null;
+  var code=VL[$('lang').value]||'tr-TR';
+  if(NATIVE){
+    stopSpeak();var my=spk;speaking=true;b.textContent='⏹ Durdur';
+    (async function(){for(var k=0;k<chunks.length&&my===spk;k++){try{await plugin('TextToSpeech').speak({text:chunks[k].trim(),lang:code,rate:1.0})}catch(e){break}}if(my===spk)stopSpeak()})();
+    return;
+  }
+  var vs=speechSynthesis.getVoices(),voice=null;
   for(var i=0;i<vs.length;i++)if(vs[i].lang&&vs[i].lang.toLowerCase().indexOf(code.slice(0,2))===0){voice=vs[i];break}
   speechSynthesis.cancel();speaking=true;b.textContent='⏹ Durdur';
   chunks.forEach(function(c,k){var u=new SpeechSynthesisUtterance(c.trim());u.lang=code;if(voice)u.voice=voice;if(k===chunks.length-1){u.onend=stopSpeak;u.onerror=stopSpeak}speechSynthesis.speak(u)});
@@ -954,7 +969,7 @@ async function runDiag(){
     if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText('tanilama');dAdd('ok','Pano (kopyalama)','çalışıyor')}
     else{var okc=fallbackCopy('tanilama');dAdd(okc?'warn':'bad','Pano (kopyalama)',okc?'yedek yöntemle çalışıyor':'çalışmıyor')}
   }catch(e){var okc2=fallbackCopy('tanilama');dAdd(okc2?'warn':'bad','Pano (kopyalama)',okc2?'ana yöntem engelli, yedek yöntem çalışıyor':'çalışmıyor')}
-  dAdd('ok','Ortam',location.protocol+' · '+(navigator.standalone?'ana ekran uygulaması':'tarayıcı/uygulama penceresi')+' · '+String(navigator.userAgent).slice(0,100));
+  dAdd('ok','Ortam',location.protocol+' · '+(NATIVE?'Android uygulaması':navigator.standalone||matchMedia('(display-mode: standalone)').matches?'ana ekran uygulaması':'tarayıcı/uygulama penceresi')+' · '+String(navigator.userAgent).slice(0,100));
   if(location.protocol==='file:')dAdd('warn','Adres türü','Dosya olarak (file://) açılmış; depolama bazı uygulamalarda güvenilmez. İnternet adresinden (https) açmak daha sağlam.');
   try{
     var prevL=localStorage.getItem('dg_m');
@@ -971,6 +986,7 @@ async function runDiag(){
     dAdd(prev?'ok':'warn','Önceki açılıştan kalan işaret (IndexedDB)',prev?new Date(prev.t).toLocaleString('tr-TR')+' tarihli işaret bulundu: kitaplık kalıcı olmalı':'işaret yok: ilk çalıştırma olabilir ya da kitaplık kalıcı değil. Uygulamayı tamamen kapatıp açtıktan sonra tekrar çalıştır.');
   }catch(e){dAdd('bad','Kitaplık deposu (IndexedDB)','çalışmıyor ('+((e&&e.message)||e)+'): slaytlar sadece o oturum boyunca durur')}
   try{if(navigator.storage&&navigator.storage.persisted){var pp=await navigator.storage.persisted();dAdd(pp?'ok':'warn','Kalıcı depolama izni',pp?'verilmiş':'verilmemiş (sistem yer açmak için veriyi silebilir)')}}catch(e){}
+  if(!NATIVE&&'serviceWorker' in navigator)dAdd(navigator.serviceWorker.controller?'ok':'warn','Çevrimdışı kullanım',navigator.serviceWorker.controller?'hazır: uygulama internetsiz de açılır (yapay zekâ özellikleri hariç)':'henüz hazır değil: sayfayı bir kez yenile (https adresinde çalışır)');
   dAdd(window.pdfjsLib?'ok':'bad','PDF motoru (pdf.js)',window.pdfjsLib?'yüklendi':'yüklenemedi: internet bağlantısını veya engelleyiciyi kontrol et');
   try{
     var ac=new AbortController(),to=setTimeout(function(){ac.abort()},8000);
@@ -1008,6 +1024,7 @@ $('dgCopy').onclick=function(){
 };
 
 renderLibrary();
+if(!NATIVE&&'serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(function(){});
 })();
 </script>
 </body>

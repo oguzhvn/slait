@@ -72,6 +72,19 @@ Her destenin durumu `S` nesnesindedir ve localStorage'da JSON olarak tutulur:
 | localStorage | `gk gm gc gl pv cu ck cm` | Ayarlar: anahtar, model, ders, dil, sağlayıcı, özel API |
 | localStorage | `pin`, `ratio` | Görünüm tercihleri |
 
+## PWA ve Android uygulaması
+
+**PWA:** `manifest.webmanifest` uygulamayı yüklenebilir yapar. `sw.js` uygulama kabuğunu ve cdnjs'deki pdf.js/KaTeX dosyalarını önbelleğe alır: sayfa için önce ağ (güncellemeler gelsin), diğer dosyalar için önce önbellek. Yapay zekâ istekleri (POST) hiç önbelleğe girmez. Service worker yalnızca `https:` veya `localhost` üzerinde, Android uygulaması dışında kaydedilir. `sw.js` içindeki `CACHE` adı değiştirilirse eski önbellek silinir.
+
+**Android (Capacitor 8):** `scripts/build-www.js` `index.html`'i `www/`'ye kopyalar, cdnjs adreslerini `vendor/` altındaki yerel kopyalarla değiştirir ve Capacitor çalışma zamanını (`vendor/capacitor.js`) ekler. Uygulama `NATIVE` olduğunda:
+
+| Özellik | Web | Android |
+|---|---|---|
+| Dosya indirme (`saveFile`) | `<a download>` / Web Share | `Filesystem.writeFile` (önbellek klasörü) + `Share.share` |
+| Sesli okuma | `speechSynthesis` | `TextToSpeech.speak` (parça parça, `spk` sayacıyla durdurulur) |
+
+Eklentiler bundler olmadan `Capacitor.registerPlugin(ad)` ile alınır (`plugin()`). `android/` klasörü depoda tutulmaz; iş akışı her derlemede `npx cap add android` ile üretir, `android-res/` simgelerini kopyalar ve `versionCode`'u çalıştırma numarasından verir. İmza için depodaki sabit `android-signing/debug.keystore` kullanılır, böylece yeni APK eskisinin üzerine kurulur.
+
 ## Yedek dosyası
 
 `backupAll()` her desteyi `{name, course, mime, added, opened, pages, data, state}` olarak yazar: `data` dosyanın kendisi (data URL), `state` destenin `S` durumu. Dosya: `{app: 'slaity', v: 1, created, decks: [...]}`. Ayarlar ve API anahtarları dahil değildir.

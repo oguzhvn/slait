@@ -1,5 +1,10 @@
 # Değişiklik geçmişi
 
+## 2026-10-30 (4)
+
+- **Android uygulaması:** Capacitor ile APK; GitHub Actions her `main` güncellemesinde derleyip "apk" sürümü olarak yayınlıyor. İndirme/paylaşma ve sesli okuma Android eklentileriyle çalışıyor; pdf.js ve KaTeX uygulamanın içinde.
+- **PWA:** Ana ekrana yüklenebiliyor, bir kez açıldıktan sonra internetsiz açılıyor. Yeni uygulama simgesi.
+
 ## 2026-10-30 (3)
 
 - Kitaplığa **💾 Yedekle** ve **📥 Yedeği geri yükle** eklendi: slaytlar, açıklamalar, notlar ve kart ilerlemesi tek dosyayla başka bir adrese veya cihaza taşınabiliyor. İlk sürümün kayıtları da yedeğe giriyor.
