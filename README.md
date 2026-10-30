@@ -29,7 +29,7 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 
 ### Yayınlama (GitHub Pages)
 
-Repo ayarlarında **Settings → Pages → Deploy from a branch → `main` / root** seç. Uygulama `https://<kullanıcı>.github.io/slait/` adresinde açılır. iPhone'da Safari'den "Ana Ekrana Ekle" ile uygulama gibi kullanılabilir.
+Repo ayarlarında **Settings → Pages → Deploy from a branch → `main` / root** seç. Uygulama `https://<kullanıcı>.github.io/slaity/` adresinde açılır. iPhone'da Safari'den "Ana Ekrana Ekle" ile uygulama gibi kullanılabilir.
 
 ### Yerelde çalıştırma
 
