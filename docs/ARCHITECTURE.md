@@ -1,6 +1,6 @@
 # Mimari
 
-Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Tek dış bağımlılık cdnjs'den yüklenen **pdf.js 3.11.174**'tür.
+Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Dış bağımlılıklar cdnjs'den yüklenir: **pdf.js 3.11.174** (zorunlu) ve **KaTeX 0.16.9** (isteğe bağlı; yüklenemezse formüller düz metin kalır).
 
 ## Akış
 
@@ -19,6 +19,18 @@ Sayfa içinde gezinme `go(i)` üzerinden yapılır; zaten açık olan sayfaya gi
 | `callCustom` | `{base}/chat/completions` (OpenAI uyumlu, `stream: true`) | Model görseli reddederse sayfa metniyle tekrar dener ve bunu `noVision` içinde hatırlar |
 
 İstek iptali iki ayrı `AbortController` ile yönetilir: `ctl` (açıklama/quiz/terim) ve `qctl` (sorular). `cancelAI()` ikisini birden iptal eder; sayfa veya deste değişince çağrılır. Eski bir cevabın yanlış yere yazılmasını `tok`, `loadToken`, `docId` ve `S===state` kontrolleri önler.
+
+## Token tasarrufu
+
+- **Küçültülmüş görsel:** Ekrandaki kanvas 2600 piksele kadar çıkabilir; yapay zekâya giden kopyanın uzun kenarı `AI_IMG_MAX` (1536) ile sınırlanır.
+- **Önbellek dostu sıra:** Görsel her istekte metinden önce gelir, ardından sabit rol metni gelir. Aynı sayfadaki açıklama, quiz, terim ve sorular böylece aynı başlangıcı paylaşır; sağlayıcı bu ortak kısmı önbellekten sayabilir.
+- **Sınav önceliği:** Talimatlar ve sınav metni her sayfada birebir aynı başlangıçta (`head`), sayfa metni en sonda gönderilir.
+
+## Formüller ve Anki
+
+İstemler formülleri `\( … \)` ve `\[ … \]` ile istemeye ayarlıdır (`MATH`). `$` kullanılmaz, çünkü finans metinlerinde para birimi olarak geçer. `math(el)` cevap tamamlandıktan sonra KaTeX auto-render çalıştırır; akış sırasında ham metin görünür.
+
+`buildAnki()` quiz sorularını (`parseQuiz`) ve sözlüğü (`allGloss`) Anki'nin metin içe aktarma biçimine çevirir: `#separator:tab`, `#html:true`, `#tags column:3`, `#deck:Slaity::<dosya adı>`. Anki aynı `\( \)` sözdizimini MathJax ile gösterir.
 
 ## Veri modeli
 

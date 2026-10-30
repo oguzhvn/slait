@@ -1,12 +1,13 @@
 {
   "name": "slait",
   "private": true,
-  "description": "Slayt Açıklayıcı: PDF/görsel slaytları yapay zekâ ile sayfa sayfa açıklayan tek dosyalık web uygulaması",
+  "description": "Slaity: PDF/görsel slaytları yapay zekâ ile sayfa sayfa açıklayan tek dosyalık web uygulaması",
   "scripts": {
     "start": "npx --yes serve@14.2.4 .",
     "test": "node tests/smoke.test.js"
   },
   "devDependencies": {
+    "katex": "0.16.9",
     "pdfjs-dist": "3.11.174",
     "playwright": "1.63.0"
   }

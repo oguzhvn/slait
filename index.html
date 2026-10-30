@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Slayt">
+<meta name="apple-mobile-web-app-title" content="Slaity">
 <meta name="theme-color" content="#2f6fed">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232f6fed'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='white' font-family='-apple-system,sans-serif'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E">
-<title>Slayt Açıklayıcı (Gemini)</title>
+<title>Slaity</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
 :root{--bg:#f6f6f4;--card:#fff;--tx:#1c1c1a;--mut:#6b6b66;--ac:#2f6fed;--bd:#dcdcd6;--ex:#fff6e0;--fl:#e5484d}
 @media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--tx:#ececE8;--mut:#9a9a94;--ac:#6b9bff;--bd:#3a3a37;--ex:#33301f}}
@@ -74,7 +75,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
 </head>
 <body>
 <header>
-  <h1>Slayt Açıklayıcı</h1>
+  <h1>Slaity</h1>
   <label><input type="checkbox" id="auto" checked> Otomatik</label>
   <button id="libBtn">📚 Kitaplığım</button>
   <button id="gear">⚙︎ Ayarlar</button>
@@ -129,7 +130,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
       <input type="number" id="jump" min="1" value="1" inputmode="numeric"><span id="tot" class="mut">/ 1</span>
       <button id="next">›</button><button id="last">»</button>
     </div>
-    <div class="row" style="justify-content:center"><button id="flag">🚩 Tekrar et</button><button id="exp">Notları indir</button><button id="cpy">Notları kopyala</button></div>
+    <div class="row" style="justify-content:center"><button id="flag">🚩 Tekrar et</button><button id="exp">Notları indir</button><button id="cpy">Notları kopyala</button><button id="anki" title="Quiz soruları ve terimler Anki kartı olarak">🃏 Anki'ye aktar</button></div>
     <div class="row" style="justify-content:center"><span class="mut" style="align-self:center">Oran:</span><button id="r5050">50:50</button><button id="r6040">60:40</button><button id="pin" class="on">📌 Sabit</button></div>
     <div id="chips" class="row" style="justify-content:center"></div>
   </section>
@@ -173,6 +174,8 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
@@ -412,9 +415,11 @@ var LANGS={tr:'Türkçe',en:'İngilizce',de:'Almanca',fr:'Fransızca',es:'İspan
 function langName(){return LANGS[$('lang').value]||'Türkçe'}
 function FMT(){
   var l=$('lang').value,extra=l!=='tr'?(' Başlıkları (ANA FİKİR, AÇIKLAMA, ÖRNEK, AKILDA TUT) DEĞİŞTİRMEDEN aynen böyle bırak, sadece başlıkların altındaki içerikleri '+langName()+' dilinde yaz.'):'';
-  return 'Şu düzeni AYNEN kullan, her başlık kendi satırında ve büyük harfle olsun:\nANA FİKİR: (1-2 cümle)\nAÇIKLAMA: (adım adım anlat, önemli terimleri tanımla)\nÖRNEK: (en az bir somut örnek: günlük hayattan, sayısal veya işletme/finans bağlamından; hesap varsa adım adım çöz)\nAKILDA TUT: (tek cümlelik özet)\nMarkdown işaretleri (#, *, **) kullanma.'+extra;
+  return 'Şu düzeni AYNEN kullan, her başlık kendi satırında ve büyük harfle olsun:\nANA FİKİR: (1-2 cümle)\nAÇIKLAMA: (adım adım anlat, önemli terimleri tanımla)\nÖRNEK: (en az bir somut örnek: günlük hayattan, sayısal veya işletme/finans bağlamından; hesap varsa adım adım çöz)\nAKILDA TUT: (tek cümlelik özet)\nMarkdown işaretleri (#, *, **) kullanma.'+MATH+extra;
 }
 var LB=/^\s*(ANA FİKİR|AÇIKLAMA|ÖRNEK|AKILDA TUT)\s*:\s*(.*)$/;
+var MATH=' Formül gerekiyorsa LaTeX yaz: satır içinde \\( ... \\), ayrı satırda \\[ ... \\]. Formül için $ işareti kullanma.';
+function math(el){if(window.renderMathInElement)try{renderMathInElement(el,{delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})}catch(e){}}
 function ctx(){
   var c=$('course').value.trim(),p=S.c[n-1]?S.c[n-1].replace(/\s+/g,' ').slice(0,350):'';
   var nt=S.n&&S.n[n]?S.n[n].trim().slice(0,1500):'';
@@ -431,11 +436,12 @@ function fmt(t){
     else{if(!cur){cur=document.createElement('p');out.appendChild(cur)}cur.textContent+=(cur.textContent?'\n':'')+l}
   });
 }
+function parseQuiz(t){return String(t||'').replace(/\*\*/g,'').split(/SORU\s*\d*\s*:/i).slice(1).map(function(b){var pr=b.split(/CEVAP\s*:/i);return {q:pr[0].trim(),a:(pr[1]||'').trim()}})}
 function quiz(t,final){
   out.className='';out.textContent='';
-  t.replace(/\*\*/g,'').split(/SORU\s*\d*\s*:/i).slice(1).forEach(function(b,i){
-    var pr=b.split(/CEVAP\s*:/i),d=document.createElement('details'),s=document.createElement('summary'),a=document.createElement('p');
-    s.textContent=pr[0].trim();a.textContent=(pr[1]||'…').trim();d.appendChild(s);d.appendChild(a);
+  parseQuiz(t).forEach(function(x,i){
+    var d=document.createElement('details'),s=document.createElement('summary'),a=document.createElement('p');
+    s.textContent=x.q;a.textContent=x.a||'…';d.appendChild(s);d.appendChild(a);
     if(final){
       var key=i+1,rw=document.createElement('div'),ok=document.createElement('button'),bad=document.createElement('button');
       rw.className='qrow';ok.textContent='✓ Bildim';bad.textContent='✗ Bilemedim';
@@ -465,9 +471,14 @@ function view(){
   if(mode==='e'){S.c[n]?fmt(S.c[n]):msg($('auto').checked?'Açıklama hazırlanıyor…':'Açıklamak için "Yeniden"e bas.')}
   else if(mode==='q'){S.q[n]?quiz(S.q[n],true):msg('Bu sayfa için quiz yok. "Yeniden"e basarak üret.')}
   else{S.g[n]?gloss(S.g[n]):msg('Bu sayfa için terim yok. "Yeniden"e basarak çıkar.')}
+  math(out);
 }
 
-function imgB64(){return cv.toDataURL('image/jpeg',0.85).split(',')[1]}
+// Long side capped for the AI copy only: fewer image tokens, slide text stays legible.
+var AI_IMG_MAX=1536;
+function imgB64(){var k=Math.min(1,AI_IMG_MAX/Math.max(cv.width,cv.height)),c=cv;
+  if(k<1){c=document.createElement('canvas');c.width=Math.round(cv.width*k);c.height=Math.round(cv.height*k);var x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cv,0,0,c.width,c.height)}
+  return c.toDataURL('image/jpeg',0.85).split(',')[1]}
 function imgTurn(text){return {role:'user',text:text,image:imgB64(),src:pdf,page:n}}
 async function pageText(doc,p,max){if(!doc)return '';try{var pg=await doc.getPage(p),tc=await pg.getTextContent();return tc.items.map(function(x){return x.str}).join(' ').replace(/\s+/g,' ').trim().slice(0,max||6000)}catch(e){return ''}}
 
@@ -478,7 +489,7 @@ async function callAI(turns,onText,signal){
 
 async function callGemini(turns,onText,signal){
   var k=$('key').value.trim();if(!k){$('set').open=true;throw {m:'Önce Gemini API anahtarını gir.'}}
-  var contents=turns.map(function(t){var parts=[{text:t.text}];if(t.image)parts.push({inline_data:{mime_type:'image/jpeg',data:t.image}});return {role:t.role==='assistant'?'model':'user',parts:parts}});
+  var contents=turns.map(function(t){var parts=[{text:t.text}];if(t.image)parts.unshift({inline_data:{mime_type:'image/jpeg',data:t.image}});return {role:t.role==='assistant'?'model':'user',parts:parts}});
   var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent($('model').value)+':streamGenerateContent?alt=sse',
     {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},signal:signal,body:JSON.stringify({contents:contents,generationConfig:{temperature:0.6}})});
   if(!r.ok){var j={};try{j=await r.json()}catch(e){}
@@ -501,7 +512,7 @@ async function callCustom(turns,onText,signal){
   var base=$('curl').value.trim().replace(/\/+$/,''),k=$('ckey').value.trim(),m=$('cmodel').value.trim();
   if(!base||!m){$('set').open=true;throw {m:'Önce API adresini ve model adını gir.'}}
   function makeMessages(withImages,texts){return turns.map(function(t,i){
-    var content=withImages&&t.image?[{type:'text',text:t.text},{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+t.image}}]:t.text;
+    var content=withImages&&t.image?[{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+t.image}},{type:'text',text:t.text}]:t.text;
     if(!withImages&&t.image)content+=texts&&texts[i]?'\n\nModel görsel desteklemediği için slayt görseli yerine sayfanın metni veriliyor:\n"""\n'+texts[i]+'\n"""':'\n\nNot: Model görsel desteklemiyor ve bu sayfadan metin çıkarılamadı, yani slaytı göremiyorsun. Bunu öğrenciye açıkça söyle ve içerik uydurma.';
     return {role:t.role,content:content};
   })}
@@ -532,7 +543,7 @@ async function run(kind,variant){
   cancelRun();var requestCtl=new AbortController();ctl=requestCtl;var page=n,state=S,requestDoc=docId,viewToken=tok,sig=requestCtl.signal;
   stopBtn();
   var text;
-  if(kind==='q')text=role()+ctx()+' Bu sayfa için 3 quiz sorusu hazırla (biri kavramsal, biri örnek veya hesaplama gerektiren, biri yorum sorusu). Tam şu biçimde yaz:\nSORU 1: ...\nCEVAP: ...\nSORU 2: ...\nCEVAP: ...\nSORU 3: ...\nCEVAP: ...\n"SORU" ve "CEVAP" etiketlerini değiştirme, ama soru ve cevapların içeriğini '+langName()+' dilinde yaz. Markdown kullanma.';
+  if(kind==='q')text=role()+ctx()+' Bu sayfa için 3 quiz sorusu hazırla (biri kavramsal, biri örnek veya hesaplama gerektiren, biri yorum sorusu). Tam şu biçimde yaz:\nSORU 1: ...\nCEVAP: ...\nSORU 2: ...\nCEVAP: ...\nSORU 3: ...\nCEVAP: ...\n"SORU" ve "CEVAP" etiketlerini değiştirme, ama soru ve cevapların içeriğini '+langName()+' dilinde yaz. Markdown kullanma.'+MATH;
   else if(kind==='t')text=role()+ctx()+' Bu sayfadaki önemli terimleri ve kavramları listele (en fazla 8). Her terimi ayrı satırda tam şu biçimde yaz:\nTERİM: slayttaki orijinal terim | '+langName()+' karşılığı | tek cümlelik sade tanım\n"TERİM:" etiketini değiştirme. Sayfada terim yoksa tek satır yaz: TERİM: - | - | Bu sayfada terim yok. Markdown kullanma.';
   else text=role()+ctx()+' '+FMT()+(variant==='deep'?'\nBu kez ÖRNEK bölümünde en az 3 farklı örnek ver (basitten zora) ve açıklamayı daha detaylı yap.':'')+(variant==='simple'?'\nBunu çok daha basit anlat: karmaşık terimlerden kaçın, kısa cümleler kullan, sanki konuyu hiç bilmeyen birine anlatıyormuşsun gibi yaz.':'');
   var draw=kind==='q'?quiz:kind==='t'?gloss:fmt;
@@ -541,10 +552,10 @@ async function run(kind,variant){
   try{
     var t=await callAI([imgTurn(text)],function(a){if(ctl===requestCtl&&!sig.aborted&&page===n&&mode===kind&&S===state&&docId===requestDoc&&tok===viewToken)draw(a)},sig);
     if(ctl===requestCtl&&!sig.aborted&&S===state&&docId===requestDoc){store[page]=t;if(kind==='q')delete state.w[page];save();chips();
-      if(page===n&&mode===kind&&tok===viewToken)draw(t,true)}
+      if(page===n&&mode===kind&&tok===viewToken){draw(t,true);math(out)}}
   }catch(e){var here=page===n&&S===state&&docId===requestDoc&&tok===viewToken;
     if(!(e&&e.name==='AbortError')){if(here)msg((e&&e.m)||'Bağlantı hatası. İnterneti kontrol et.',true)}
-    else if(here&&!ctl&&mode===kind){store[page]?draw(store[page],true):msg('Durduruldu. Tekrar başlatmak için "Yeniden"e bas.')}}
+    else if(here&&!ctl&&mode===kind){store[page]?(draw(store[page],true),math(out)):msg('Durduruldu. Tekrar başlatmak için "Yeniden"e bas.')}}
   if(ctl===requestCtl){ctl=null;stopBtn()}
 }
 async function follow(q,reuseDiv,opt){
@@ -555,12 +566,13 @@ async function follow(q,reuseDiv,opt){
   if(!d){d=document.createElement('div');d.className='qa';d.innerHTML='<b></b><p></p>';d.firstChild.textContent=opt.label||('Soru: '+q);chat.appendChild(d);try{d.scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}}
   var old=d.querySelector('.retry');if(old)old.remove();
   var p=d.querySelector('p');p.className='';p.textContent='Düşünüyor…';
-  var first=role()+ctx()+(opt.long?' Adım adım, düzenli ve ayrıntılı yaz; her hesap adımını ayrı satırda göster. Markdown kullanma.':' Sorulara kısa, net ve mümkünse örnekli cevap ver, Markdown kullanma.');
+  var first=role()+ctx()+(opt.long?' Adım adım, düzenli ve ayrıntılı yaz; her hesap adımını ayrı satırda göster. Markdown kullanma.':' Sorulara kısa, net ve mümkünse örnekli cevap ver, Markdown kullanma.')+MATH;
   var c=[imgTurn(first)];
   if(S.c[n]){c.push({role:'assistant',text:S.c[n]})}
   c.push({role:'user',text:q});
   try{
     await callAI(c,function(a){if(qctl===requestCtl&&!requestCtl.signal.aborted&&page===n&&S===state&&docId===requestDoc&&tok===viewToken)p.textContent=a},requestCtl.signal);
+    if(qctl===requestCtl&&page===n&&docId===requestDoc&&tok===viewToken)math(p);
   }catch(e){
     if(!(e&&e.name==='AbortError')&&S===state&&docId===requestDoc&&tok===viewToken){
       p.textContent=(e&&e.m)||'Bağlantı hatası.';p.className='err';
@@ -660,6 +672,23 @@ $('cpy').onclick=function(){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(md).then(function(){done(true)}).catch(function(){done(fallbackCopy(md))});
   else done(fallbackCopy(md));
 };
+// ---- Anki'ye aktar: Anki'nin metin içe aktarma biçimi (sekmeyle ayrılmış, başlık satırlı)
+function ankiField(t){return esc(String(t).replace(/\t/g,' ').trim()).replace(/\r?\n/g,'<br>')}
+function buildAnki(name,X){
+  var base=name.replace(/\.[^.]+$/,'')||'slaity',tag=base.replace(/[\s:]+/g,'_'),rows=[];
+  Object.keys(X.q||{}).map(Number).sort(function(a,b){return a-b}).forEach(function(p){
+    parseQuiz(X.q[p]).forEach(function(x){if(x.q&&x.a)rows.push([ankiField(x.q),ankiField(x.a),'slaity '+tag+' sayfa'+p+' quiz'])});
+  });
+  allGloss(X.g).forEach(function(x){rows.push([ankiField(x.t),ankiField([x.k,x.d].filter(Boolean).join(' · ')+' (s. '+x.pg.join(', ')+')'),'slaity '+tag+' terim'])});
+  if(!rows.length)return '';
+  return '#separator:tab\n#html:true\n#tags column:3\n#deck:Slaity::'+base.replace(/[\r\n\t]/g,' ')+'\n'+rows.map(function(r){return r.join('\t')}).join('\n')+'\n';
+}
+$('anki').onclick=function(){
+  var b=this,old=b.textContent,txt=buildAnki(fname,S);
+  function tell(m){b.textContent=m;setTimeout(function(){b.textContent=old},2200)}
+  if(!txt){tell('Önce Quiz veya Terimler üret');return}
+  saveFile(new Blob([txt],{type:'text/plain'}),(fname.replace(/\.[^.]+$/,'')||'slaity')+'-anki.txt').catch(function(){tell('İndirilemedi')});
+};
 function send(){var q=$('q').value.trim();if(!q)return;$('q').value='';follow(q)}
 $('ask').onclick=send;$('q').addEventListener('keydown',function(e){if(e.key==='Enter')send()});
 document.addEventListener('keydown',function(e){var tg=e.target;if($('app').hidden||!$('diagBox').hidden||e.altKey||e.ctrlKey||e.metaKey||/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)||tg.isContentEditable)return;if(e.key==='ArrowRight')go(n+1);if(e.key==='ArrowLeft')go(n-1)});
@@ -677,7 +706,7 @@ $('tts').onclick=function(){
   var t=S.c[n];
   if(!t){b.textContent='Önce açıklama gelsin';setTimeout(function(){b.textContent='🔊 Oku'},1500);return}
   var HEAD={'ANA FİKİR':'Ana fikir','AÇIKLAMA':'Açıklama','ÖRNEK':'Örnek','AKILDA TUT':'Akılda tut'},tr=$('lang').value==='tr';
-  var clean=t.replace(/\*\*|^#+\s*/gm,'').replace(/^\s*(ANA FİKİR|AÇIKLAMA|ÖRNEK|AKILDA TUT)\s*:/gm,function(m,a){return tr?HEAD[a]+'. ':''});
+  var clean=t.replace(/\*\*|^#+\s*/gm,'').replace(/\\[()[\]]/g,' ').replace(/^\s*(ANA FİKİR|AÇIKLAMA|ÖRNEK|AKILDA TUT)\s*:/gm,function(m,a){return tr?HEAD[a]+'. ':''});
   var chunks=[],cur='';
   (clean.match(/[^.!?\n]+[.!?]*|\n/g)||[clean]).forEach(function(sn){if((cur+sn).length>220){if(cur.trim())chunks.push(cur);cur=sn}else cur+=sn});
   if(cur.trim())chunks.push(cur);
@@ -749,6 +778,8 @@ $('pRun').onclick=async function(){
   var myS=S,myDoc=docId,myPdf=pdf,tot=total,ex=($('exam').value||'').trim().slice(0,6000),course=$('course').value.trim(),errMsg='',skipped=0;
   if(myS.pex!==ex){myS.p={};myS.pex=ex}
   var requestCtl=new AbortController();bctl=requestCtl;var sig=requestCtl.signal;
+  // Same prefix on every page (instructions + exam material), page text last: lets the provider cache it.
+  var head='Sen bir üniversite dersi için sınav stratejisi uzmanısın. '+(course?'Ders: '+course+'. ':'')+(ex?'Aşağıda çıkmış sorular / hocanın vurguları / sınav kapsamı var:\n"""\n'+ex+'\n"""\n':'Sınav materyali verilmedi; sayfanın kavramsal önemini ve sınavlarda sorulma olasılığını genel olarak değerlendir.\n')+'\nGörevin: en sonda metni verilen slayt sayfasının sınavda çıkma olasılığını değerlendirmek. NEDEN kısmını '+langName()+' dilinde yaz. Tam şu biçimde ver (etiketleri değiştirme; ÖNCELİK değeri her zaman Yüksek, Orta veya Düşük olsun):\nÖNCELİK: Yüksek\nNEDEN: tek cümle\n\n';
   try{
     for(var p=1;p<=tot;p++){
       if(sig.aborted)throw {name:'AbortError'};
@@ -756,7 +787,7 @@ $('pRun').onclick=async function(){
       if(myS.p[p])continue;
       var txt=await pageText(myPdf,p,3500);
       if(txt.length<25){skipped++;continue}
-      var prompt='Sen bir üniversite dersi için sınav stratejisi uzmanısın. '+(course?'Ders: '+course+'. ':'')+(ex?'Aşağıda çıkmış sorular / hocanın vurguları / sınav kapsamı var:\n"""\n'+ex+'\n"""\n':'Sınav materyali verilmedi; sayfanın kavramsal önemini ve sınavlarda sorulma olasılığını genel olarak değerlendir.\n')+'\nSlaytın '+p+'/'+tot+'. sayfasının metni:\n"""\n'+txt+'\n"""\n\nBu sayfanın sınavda çıkma olasılığını değerlendir. NEDEN kısmını '+langName()+' dilinde yaz. Tam şu biçimde ver (etiketleri değiştirme; ÖNCELİK değeri her zaman Yüksek, Orta veya Düşük olsun):\nÖNCELİK: Yüksek\nNEDEN: tek cümle';
+      var prompt=head+'Slaytın '+p+'/'+tot+'. sayfasının metni:\n"""\n'+txt+'\n"""';
       var r=await callAI([{role:'user',text:prompt}],function(){},sig);
       var lm=r.match(/ÖNCELİK\s*:\s*(Yüksek|Orta|Düşük)/i),rm=r.match(/NEDEN\s*:\s*(.*)/i);
       if(lm){var L=lm[1].toLocaleLowerCase('tr');myS.p[p]={l:L==='yüksek'?'Yüksek':L==='orta'?'Orta':'Düşük',r:rm?rm[1].trim().slice(0,200):''}}
@@ -840,7 +871,7 @@ $('dgSp').onclick=function(){
   catch(e){$('dgNote').textContent='Ses çalışmıyor: '+((e&&e.message)||e)}
 };
 $('dgCopy').onclick=function(){
-  var t='Slayt Açıklayıcı tanılama\n'+dText(),b=this,old=b.textContent;
+  var t='Slaity tanılama\n'+dText(),b=this,old=b.textContent;
   function done(ok){b.textContent=ok?'Kopyalandı ✓':'Kopyalanamadı';setTimeout(function(){b.textContent=old},1500)}
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){done(true)}).catch(function(){done(fallbackCopy(t))});else done(fallbackCopy(t));
 };

@@ -1,4 +1,4 @@
-# Slayt Açıklayıcı
+# Slaity
 
 Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, tek dosyalık bir web uygulaması. Sunucu, hesap veya kurulum gerektirmez: `index.html` dosyasını tarayıcıda açman yeterli.
 
@@ -11,6 +11,8 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 - **Aralıklı tekrar:** 🚩 ile işaretlenen sayfalar 1, 3, 7, 14 ve 30 gün sonra "Bugün tekrar" listesine düşer.
 - **Sınav önceliği:** Çıkmış soruları veya hocanın vurgularını yapıştır; tüm sayfalar Yüksek / Orta / Düşük olarak etiketlenir.
 - **Kişisel notlar, sesli okuma, dışa aktarma:** Notlar Word, metin veya Markdown olarak indirilebilir ya da kopyalanabilir.
+- **Anki'ye aktarma:** Quiz soruları ve terimler, Anki'nin doğrudan içe aktardığı bir metin dosyası olarak indirilir (Anki → Dosya → İçe aktar). Deste ve etiketler dosyada hazır gelir.
+- **Formüller:** Açıklamalardaki formüller KaTeX ile düzgün gösterilir; Anki'ye aynı biçimde (`\( … \)`) aktarılır.
 - **Kitaplık:** Eklenen dosyalar cihazda saklanır, sonra kaldığın yerden açılır.
 - **Mobil uyumlu:** Kaydırarak sayfa geçme, iki parmakla yakınlaştırma, sabitlenebilen slayt paneli, ana ekrana eklenebilir.
 - **7 dil:** Türkçe, İngilizce, Almanca, Fransızca, İspanyolca, Rusça, Arapça.
