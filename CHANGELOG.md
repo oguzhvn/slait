@@ -1,5 +1,9 @@
 # Değişiklik geçmişi
 
+## 2026-10-30 (3)
+
+- Kitaplığa **💾 Yedekle** ve **📥 Yedeği geri yükle** eklendi: slaytlar, açıklamalar, notlar ve kart ilerlemesi tek dosyayla başka bir adrese veya cihaza taşınabiliyor. İlk sürümün kayıtları da yedeğe giriyor.
+
 ## 2026-10-30 (2)
 
 - Uygulamanın adı **Slaity** oldu.

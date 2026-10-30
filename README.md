@@ -14,6 +14,7 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 - **Kartlar:** Quiz soruları ve terimler otomatik olarak çalışma kartına dönüşür. Kart önce soruyu gösterir, sonra cevabı; Tekrar / Zor / İyi / Kolay değerlendirmesine göre bir sonraki tekrar zamanı belirlenir (1 dk'dan aylara). Quiz'de "Bilemedim" dediğin soru hemen tekrar sırasına girer. Kitaplıkta destelere göre bekleyen kartlar listelenir. Klavye: Boşluk = cevabı göster, 1-4 = değerlendir.
 - **Formüller:** Açıklamalardaki formüller KaTeX ile düzgün gösterilir.
 - **Kitaplık:** Eklenen dosyalar cihazda saklanır, sonra kaldığın yerden açılır.
+- **Yedekle / Geri yükle:** Kitaplıktaki tüm slaytlar, açıklamalar, notlar, quiz'ler ve kart ilerlemesi tek bir `slaity-yedek-….json` dosyasına alınır; başka bir cihazda veya adreste geri yüklenir. API anahtarları yedeğe girmez.
 - **Mobil uyumlu:** Kaydırarak sayfa geçme, iki parmakla yakınlaştırma, sabitlenebilen slayt paneli, ana ekrana eklenebilir.
 - **7 dil:** Türkçe, İngilizce, Almanca, Fransızca, İspanyolca, Rusça, Arapça.
 
@@ -30,6 +31,14 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 ### Yayınlama (GitHub Pages)
 
 Repo ayarlarında **Settings → Pages → Deploy from a branch → `main` / root** seç. Uygulama `https://<kullanıcı>.github.io/slait/` adresinde açılır. iPhone'da Safari'den "Ana Ekrana Ekle" ile uygulama gibi kullanılabilir.
+
+### Verileri başka bir yere taşıma
+
+Tarayıcı verileri **açtığın adrese** bağlıdır: `index.html`'i başka bir adresten (ör. GitHub Pages) açarsan önceki kitaplığın orada görünmez. Taşımak için:
+
+1. Uygulamanın yeni sürümünü, eski verilerinin olduğu **aynı yerde** aç (aynı dosya/aynı adres; eski dosyanın içeriğini yenisiyle değiştirmek yeterli). Eski sürümün kayıtları otomatik tanınır.
+2. **📚 Kitaplığım → 💾 Yedekle** ile yedek dosyasını kaydet.
+3. Yeni adreste **📚 Kitaplığım → 📥 Yedeği geri yükle** ile o dosyayı seç. Aynı slayt zaten varsa tekrar eklenmez.
 
 ### Yerelde çalıştırma
 

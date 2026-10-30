@@ -86,6 +86,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
   <button id="diagBtn" title="Bu cihazda neyin çalıştığını test et">🩺 Tanılama</button>
   <label class="btn p" for="file">+ Slayt Ekle</label>
   <input type="file" id="file" accept="application/pdf,image/*">
+  <input type="file" id="bkFile" accept=".json,application/json">
 </header>
 <div id="stWarn" class="err" hidden style="padding:8px 14px;border-bottom:1px solid var(--bd);cursor:pointer" title="Gizlemek için dokun"></div>
 <details id="set" open style="border:0;border-radius:0;margin:0">
@@ -357,6 +358,47 @@ function secList(title,rows,empty){
   return sec;
 }
 
+// ---- yedekle / geri yükle: slaytlar (dosyanın kendisi) + her destenin durumu, tek JSON dosyası
+// Tarayıcı verileri adrese bağlıdır; başka bir adrese/cihaza taşımanın yolu budur. API anahtarları dahil edilmez.
+function blobToDataURL(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=function(){rej(r.error)};r.readAsDataURL(b)})}
+async function backupAll(btn){
+  var old=btn.textContent;btn.disabled=true;btn.textContent='Hazırlanıyor…';
+  try{
+    var decks=await listDecks(),out=[];
+    for(var i=0;i<decks.length;i++){var d=decks[i];if(!d.blob)continue;
+      var raw=ls(deckStorageKey(d.id))||ls(legacyStorageKey(d.name,d.blob)),st=null;try{st=raw?JSON.parse(raw):null}catch(e){}
+      out.push({name:d.name,course:d.course||'',mime:d.mime||d.blob.type||'',added:d.added||0,opened:d.opened||0,pages:d.pages||null,data:await blobToDataURL(d.blob),state:st});
+    }
+    if(!out.length){btn.textContent='Yedeklenecek slayt yok';return}
+    var d0=new Date(),day=d0.getFullYear()+'-'+String(d0.getMonth()+1).padStart(2,'0')+'-'+String(d0.getDate()).padStart(2,'0');
+    await saveFile(new Blob([JSON.stringify({app:'slaity',v:1,created:Date.now(),decks:out})],{type:'application/json'}),'slaity-yedek-'+day+'.json');
+    btn.textContent=out.length+' deste yedeklendi ✓';
+  }catch(e){btn.textContent='Yedeklenemedi: '+((e&&e.message)||e)}
+  finally{btn.disabled=false;setTimeout(function(){btn.textContent=old},3000)}
+}
+$('bkFile').addEventListener('change',async function(e){
+  var f=e.target.files[0];if(!f)return;e.target.value='';
+  var B;try{B=JSON.parse(await f.text())}catch(x){alert('Bu dosya okunamadı. Slaity\'den aldığın yedek dosyasını (slaity-yedek-….json) seç.');return}
+  if(!B||B.app!=='slaity'||!Array.isArray(B.decks)){alert('Bu bir Slaity yedeği değil.');return}
+  var have=await listDecks(),added=0,merged=0,skipped=0;
+  for(var i=0;i<B.decks.length;i++){var d=B.decks[i];
+    try{
+      var blob=await (await fetch(d.data)).blob(),same=null;
+      for(var j=0;j<have.length;j++)if(have[j].name===d.name&&have[j].blob&&have[j].blob.size===blob.size){same=have[j];break}
+      if(same){
+        // Aynı slayt zaten var: yalnızca burada hiç kaydı yoksa yedekteki notları yaz.
+        if(d.state&&!ls(deckStorageKey(same.id))&&!ls(legacyStorageKey(same.name,same.blob))){ls(deckStorageKey(same.id),JSON.stringify(d.state));merged++}else skipped++;
+        continue;
+      }
+      var id=await saveDeck({name:d.name,course:d.course||'',mime:d.mime||blob.type,blob:new File([blob],d.name,{type:d.mime||blob.type}),added:d.added||Date.now(),opened:d.opened||Date.now(),pages:d.pages||null});
+      if(d.state)ls(deckStorageKey(id),JSON.stringify(d.state));
+      added++;
+    }catch(x){skipped++}
+  }
+  alert('Geri yükleme bitti: '+added+' deste eklendi'+(merged?', '+merged+' destenin notları eklendi':'')+(skipped?', '+skipped+' deste zaten vardı veya atlandı':'')+'.');
+  renderLibrary();
+});
+
 async function renderLibrary(){
   var items;try{items=await listDecks()}catch(e){$('empty').textContent='Kitaplık okunamadı: '+((e&&e.message)||e);return}
   $('empty').innerHTML='';
@@ -385,6 +427,10 @@ async function renderLibrary(){
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(md).then(function(){done(true)}).catch(function(){done(fallbackCopy(md))});else done(fallbackCopy(md))};
     tb.appendChild(bw);tb.appendChild(bt);tb.appendChild(bc);$('empty').appendChild(tb);
   }
+  var bk=document.createElement('div');bk.className='row';bk.style.cssText='justify-content:center;margin-bottom:14px';
+  var bs=document.createElement('button');bs.textContent='💾 Yedekle';bs.title='Tüm slaytlar, açıklamalar, notlar ve kartlar tek dosyada';bs.onclick=function(){backupAll(bs)};
+  var br=document.createElement('label');br.className='btn';br.htmlFor='bkFile';br.textContent='📥 Yedeği geri yükle';
+  bk.appendChild(bs);bk.appendChild(br);$('empty').appendChild(bk);
   if(!items.length){var p=document.createElement('div');p.textContent='Henüz kayıtlı slayt yok. Üstten "+ Slayt Ekle" ile bir PDF/görsel seç, otomatik olarak burada saklanır.';$('empty').appendChild(p);return}
   items.sort(function(a,b){return (b.opened||b.added||0)-(a.opened||a.added||0)});
   var wrap=document.createElement('div');wrap.style.cssText='max-width:560px;margin:0 auto';
