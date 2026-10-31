@@ -63,6 +63,7 @@ npm start          # http://localhost:3000
 npm install
 npx playwright install chromium   # ilk seferde
 npm test
+npm run vendor                    # pdf.js / KaTeX sürümü değişince vendor/'ı yeniler
 npm run build:www                 # Android için www/ (yerelde APK: npx cap add android && cd android && ./gradlew assembleDebug)
 ```
 

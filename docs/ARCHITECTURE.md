@@ -1,6 +1,8 @@
 # Mimari
 
-Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Dış bağımlılıklar cdnjs'den yüklenir: **pdf.js 3.11.174** (zorunlu) ve **KaTeX 0.16.9** (isteğe bağlı; yüklenemezse formüller düz metin kalır).
+Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Kütüphaneler depodaki `vendor/` klasöründen servis edilir (CDN yok): **pdf.js 3.11.174** (zorunlu, `defer` ile yüklenir, işçisi ilk kullanımda `pdfLib()` ile ayarlanır) ve **KaTeX 0.19.1** (isteğe bağlı; yüklenemezse formüller düz metin kalır). `vendor/` klasörü `npm run vendor` ile `node_modules`'tan üretilir; sürümler `vendor/VERSIONS.json`'da.
+
+**Güvenlik:** pdf.js 4.2.67'den eski sürümlerde, hazırlanmış bir PDF yazı tipiyle sayfada JavaScript çalıştırılabiliyor (GHSA-wgrm-67xf-hhpq). Bu, localStorage'daki API anahtarını riske atar. `getDocument` bu yüzden `isEvalSupported: false` ile çağrılır; pdf.js yükseltilene kadar bu seçenek kaldırılmamalı.
 
 ## Akış
 
@@ -74,9 +76,9 @@ Her destenin durumu `S` nesnesindedir ve localStorage'da JSON olarak tutulur:
 
 ## PWA ve Android uygulaması
 
-**PWA:** `manifest.webmanifest` uygulamayı yüklenebilir yapar. `sw.js` uygulama kabuğunu ve cdnjs'deki pdf.js/KaTeX dosyalarını önbelleğe alır: sayfa için önce ağ (güncellemeler gelsin), diğer dosyalar için önce önbellek. Yapay zekâ istekleri (POST) hiç önbelleğe girmez. Service worker yalnızca `https:` veya `localhost` üzerinde, Android uygulaması dışında kaydedilir. `sw.js` içindeki `CACHE` adı değiştirilirse eski önbellek silinir.
+**PWA:** `manifest.webmanifest` uygulamayı yüklenebilir yapar. `sw.js` uygulama kabuğunu ve `vendor/` dosyalarını önbelleğe alır (`vendor/` değişince `CACHE` adını artır): sayfa için önce ağ (güncellemeler gelsin), diğer dosyalar için önce önbellek. Yapay zekâ istekleri (POST) hiç önbelleğe girmez. Service worker yalnızca `https:` veya `localhost` üzerinde, Android uygulaması dışında kaydedilir. `sw.js` içindeki `CACHE` adı değiştirilirse eski önbellek silinir.
 
-**Android (Capacitor 8):** `scripts/build-www.js` `index.html`'i `www/`'ye kopyalar, cdnjs adreslerini `vendor/` altındaki yerel kopyalarla değiştirir ve Capacitor çalışma zamanını (`vendor/capacitor.js`) ekler. Uygulama `NATIVE` olduğunda:
+**Android (Capacitor 8):** `scripts/build-www.js` `index.html`, `vendor/` ve `icons/` klasörlerini `www/`'ye kopyalar ve Capacitor çalışma zamanını (`vendor/capacitor.js`) ekler. Uygulama `NATIVE` olduğunda:
 
 | Özellik | Web | Android |
 |---|---|---|

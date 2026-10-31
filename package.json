@@ -6,7 +6,8 @@
     "start": "npx --yes serve@14.2.4 .",
     "test": "node tests/smoke.test.js",
     "build:www": "node scripts/build-www.js",
-    "icons": "node scripts/gen-icons.js"
+    "icons": "node scripts/gen-icons.js",
+    "vendor": "node scripts/vendor.js"
   },
   "devDependencies": {
     "playwright": "1.63.0"
@@ -18,7 +19,7 @@
     "@capacitor/filesystem": "8.1.5",
     "@capacitor/share": "8.0.3",
     "@capacitor-community/text-to-speech": "8.0.2",
-    "katex": "0.16.9",
+    "katex": "0.19.1",
     "pdfjs-dist": "3.11.174"
   }
 }

@@ -10,7 +10,9 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Slaity</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<meta name="description" content="Ders slaytlarını yapay zekâ ile sayfa sayfa açıklayan çalışma uygulaması: açıklama, quiz, terimler, kartlar ve sınav önceliği.">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="vendor/katex/katex.min.css" media="print" onload="this.media='all'">
 <style>
 :root{--bg:#f6f6f4;--card:#fff;--tx:#1c1c1a;--mut:#6b6b66;--ac:#2f6fed;--bd:#dcdcd6;--ex:#fff6e0;--fl:#e5484d}
 @media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--tx:#ececE8;--mut:#9a9a94;--ac:#6b9bff;--bd:#3a3a37;--ex:#33301f}}
@@ -68,7 +70,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
 .qrow button.bad{border-color:var(--fl);color:var(--fl);font-weight:600}
 #plist button{padding:4px 10px;font-size:13px}
 .lib-sec{max-width:560px;margin:0 auto 14px;text-align:left}
-.lib-sec h3{font-size:15px;margin:0 0 8px}
+.lib-sec h2{font-size:15px;margin:0 0 8px}
 .item{display:flex;gap:8px;align-items:center;margin-bottom:6px}
 .item div{flex:1;min-width:0;overflow-wrap:anywhere}
 .cdf{font-size:18px;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px}
@@ -93,8 +95,8 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
 <details id="set" open style="border:0;border-radius:0;margin:0">
   <summary>Ayarlar</summary>
   <div class="row">
-    <select id="prov"><option value="gemini">Gemini (Google)</option><option value="custom">Özel API (OpenAI uyumlu)</option></select>
-    <select id="lang">
+    <select id="prov" aria-label="Yapay zekâ sağlayıcısı"><option value="gemini">Gemini (Google)</option><option value="custom">Özel API (OpenAI uyumlu)</option></select>
+    <select id="lang" aria-label="Cevap dili">
       <option value="tr">🇹🇷 Türkçe</option>
       <option value="en">🇬🇧 English</option>
       <option value="de">🇩🇪 Deutsch</option>
@@ -109,7 +111,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
   </div>
   <div id="gRow" class="row">
     <input type="password" id="key" placeholder="Gemini API anahtarı (aistudio.google.com)" style="flex:1" autocomplete="off">
-    <select id="model">
+    <select id="model" aria-label="Gemini modeli">
       <option value="gemini-flash-latest">gemini-flash-latest (önerilen)</option>
       <option value="gemini-3.6-flash">gemini-3.6-flash</option>
       <option value="gemini-3.5-flash">gemini-3.5-flash</option>
@@ -190,9 +192,9 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
     <div class="row"><button id="dgCopy" class="p">Sonucu kopyala</button><button id="dgAgain">Yeniden çalıştır</button></div>
   </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script defer src="vendor/pdfjs/pdf.min.js"></script>
+<script defer src="vendor/katex/katex.min.js"></script>
+<script defer src="vendor/katex/contrib/auto-render.min.js"></script>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
@@ -214,7 +216,8 @@ provUI();
 if(ls('gk')||ls('ck'))$('set').open=false;
 ['key','model','course','prov','curl','ckey','cmodel','lang'].forEach(function(id){$(id).onchange=function(){ls({key:'gk',model:'gm',course:'gc',prov:'pv',curl:'cu',ckey:'ck',cmodel:'cm',lang:'gl'}[id],this.value.trim());if(id==='prov')provUI()}});
 $('gear').onclick=function(){$('set').open=!$('set').open};
-if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// pdf.js loads deferred (it no longer blocks first paint); its worker is set on first use.
+function pdfLib(){if(!window.pdfjsLib)throw new Error('pdf.js yüklenemedi');if(!pdfjsLib.GlobalWorkerOptions.workerSrc)pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';return pdfjsLib}
 function save(){ls('sa:'+docId,JSON.stringify(S))}
 function deckStorageKey(id){return 'sa:deck:'+id}
 function legacyStorageKey(name,blob){return 'sa:'+name+'|'+(blob?blob.size:'0')}
@@ -355,7 +358,7 @@ async function exportAllText(){
 
 function secList(title,rows,empty){
   var sec=document.createElement('div');sec.className='lib-sec card';
-  var h=document.createElement('h3');h.textContent=title;sec.appendChild(h);
+  var h=document.createElement('h2');h.textContent=title;sec.appendChild(h);
   if(!rows.length){var e=document.createElement('div');e.className='mut';e.textContent=empty;sec.appendChild(e)}
   rows.slice(0,15).forEach(function(r){
     var it=document.createElement('div');it.className='item';
@@ -473,7 +476,7 @@ async function loadDeck(blob,name,libId,courseVal,startPage,startMode){
   $('empty').hidden=true;$('app').hidden=false;tok++;
   try{
     pdf=null;
-    if(/pdf/i.test(blob.type)||/\.pdf$/i.test(name)){var loadedPdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise;if(requestToken!==loadToken)return;pdf=loadedPdf;total=pdf.numPages}
+    if(/pdf/i.test(blob.type)||/\.pdf$/i.test(name)){var loadedPdf=await pdfLib().getDocument({data:await blob.arrayBuffer(),isEvalSupported:false}).promise;if(requestToken!==loadToken)return;pdf=loadedPdf;total=pdf.numPages}
     else{total=1;var im=new Image(),imgUrl=URL.createObjectURL(blob);try{im.src=imgUrl;await im.decode();if(requestToken!==loadToken)return;var s=Math.min(1,1400/im.width);cv.width=im.width*s;cv.height=im.height*s;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height)}finally{URL.revokeObjectURL(imgUrl)}}
     if(requestToken!==loadToken)return;
     $('sl').max=total;$('jump').max=total;$('tot').textContent='/ '+total;
@@ -737,7 +740,7 @@ $('exp').onclick=function(){
   try{
     var b=this,old=b.textContent;
     saveFile(new Blob([buildMD()],{type:'text/plain'}),(fname.replace(/\.[^.]+$/,'')||'notlar')+'-notlar.txt').catch(function(){b.textContent='İndirilemedi, "Notları kopyala" dene';setTimeout(function(){b.textContent=old},2000)});
-  }catch(e){var b=this,old=b.textContent;b.textContent='İndirilemedi, "Notları kopyala" dene';setTimeout(function(){b.textContent=old},2000)}
+  }catch(e){b.textContent='İndirilemedi, "Notları kopyala" dene';setTimeout(function(){b.textContent=old},2000)}
 };
 function fallbackCopy(t){var ta=document.createElement('textarea');try{ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();return document.execCommand('copy')}catch(e){return false}finally{if(ta.parentNode)ta.parentNode.removeChild(ta)}}
 $('cpy').onclick=function(){
