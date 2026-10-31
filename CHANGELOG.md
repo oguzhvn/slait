@@ -1,5 +1,11 @@
 # Değişiklik geçmişi
 
+## 2026-10-31
+
+- **Güvenlik:** Kötü niyetli bir PDF'in sayfada kod çalıştırabildiği pdf.js açığı (GHSA-wgrm-67xf-hhpq) `isEvalSupported: false` ile kapatıldı. KaTeX 0.16.9 → 0.19.1 (6 güvenlik uyarısı giderildi).
+- **CDN yok:** pdf.js ve KaTeX artık sitenin kendisinden (`vendor/`) yükleniyor; üçüncü taraf sunucuya istek gitmiyor.
+- **Hız ve erişilebilirlik** (Lighthouse, telefon): performans 86 → 93, erişilebilirlik 88 → 100, en iyi uygulamalar 96 → 100, SEO 90 → 100. İlk görüntü 3,2 sn → 1,2 sn. Açılır menülere ekran okuyucu etiketi, sayfa açıklaması ve simge eklendi.
+
 ## 2026-10-30 (4)
 
 - **Android uygulaması:** Capacitor ile APK; GitHub Actions her `main` güncellemesinde derleyip "apk" sürümü olarak yayınlıyor. İndirme/paylaşma ve sesli okuma Android eklentileriyle çalışıyor; pdf.js ve KaTeX uygulamanın içinde.

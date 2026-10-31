@@ -1,13 +1,11 @@
 // Browser smoke test for index.html. No real AI calls: the OpenAI-compatible
-// endpoint is mocked and pdf.js is served from node_modules (pdfjs-dist).
+// endpoint is mocked; pdf.js and KaTeX load from vendor/.
 // Run: npm test
 const path = require('path');
 const assert = require('assert');
 const { chromium } = require('playwright');
 
 const ROOT = path.join(__dirname, '..');
-const PDFJS = path.join(path.dirname(require.resolve('pdfjs-dist/package.json')), 'build');
-const KATEX = path.join(path.dirname(require.resolve('katex/package.json')), 'dist');
 
 // Two-page PDF with a line of text on each page.
 const PDF = `%PDF-1.4
@@ -27,12 +25,9 @@ trailer<</Root 1 0 R>>`;
   const errors = [];
   pg.on('pageerror', (e) => errors.push(e.message));
 
-  await pg.route('https://cdnjs.cloudflare.com/**', (r) => {
-    const url = r.request().url();
-    const k = url.split('/KaTeX/0.16.9/')[1];
-    if (k) return r.fulfill({ path: path.join(KATEX, k), contentType: k.endsWith('.css') ? 'text/css' : 'application/javascript' });
-    r.fulfill({ path: path.join(PDFJS, url.split('/').pop()), contentType: 'application/javascript' });
-  });
+  // No request may leave for a third-party host except the mocked AI API.
+  const external = [];
+  await pg.route(/^https?:\/\/(?!api\.test)/, (r) => { external.push(r.request().url()); r.abort(); });
 
   // Mock a model without vision: rejects image input, answers text-only requests slowly.
   const bodies = [];
@@ -126,6 +121,7 @@ trailer<</Root 1 0 R>>`;
   assert.strictEqual(await pg.$eval('#stWarn', (e) => e.hidden), false, 'storage warning shown');
 
   assert.deepStrictEqual(errors, [], 'no page errors');
+  assert.deepStrictEqual(external, [], 'no third-party requests');
   await browser.close();
   console.log('smoke test passed');
 })().catch((e) => { console.error(e); process.exit(1); });

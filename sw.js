@@ -1,9 +1,9 @@
-// Offline support: the app shell and the CDN libraries are cached; AI requests always go to the network.
-var CACHE = 'slaity-v1';
-var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/';
+// Offline support: the app shell and the bundled libraries are cached; AI requests always go to the network.
+// Bump CACHE when vendor/ changes so clients drop the old copies.
+var CACHE = 'slaity-v2';
 var SHELL = ['./', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png',
-  CDN + 'pdf.js/3.11.174/pdf.min.js', CDN + 'pdf.js/3.11.174/pdf.worker.min.js',
-  CDN + 'KaTeX/0.16.9/katex.min.css', CDN + 'KaTeX/0.16.9/katex.min.js', CDN + 'KaTeX/0.16.9/contrib/auto-render.min.js'];
+  './vendor/pdfjs/pdf.min.js', './vendor/pdfjs/pdf.worker.min.js',
+  './vendor/katex/katex.min.css', './vendor/katex/katex.min.js', './vendor/katex/contrib/auto-render.min.js'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
@@ -16,8 +16,7 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   var req = e.request, url = req.url;
   if (req.method !== 'GET') return;
-  var same = url.indexOf(self.registration.scope) === 0;
-  if (!same && url.indexOf(CDN) !== 0) return;
+  if (url.indexOf(self.registration.scope) !== 0) return;
   // The page itself: network first so updates arrive, cache when offline.
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(function (r) {
@@ -25,7 +24,7 @@ self.addEventListener('fetch', function (e) {
     }).catch(function () { return caches.match('./'); }));
     return;
   }
-  // Everything else (icons, versioned CDN files, KaTeX fonts): cache first, filled on first use.
+  // Everything else (icons, vendor libraries, KaTeX fonts): cache first, filled on first use.
   e.respondWith(caches.match(req, { ignoreVary: true }).then(function (hit) {
     return hit || fetch(req).then(function (r) {
       if (r.ok || r.type === 'opaque') { var copy = r.clone(); caches.open(CACHE).then(function (c) { c.put(req, copy); }); }
