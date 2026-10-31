@@ -1,5 +1,11 @@
 # Değişiklik geçmişi
 
+## 2026-10-31 (4)
+
+- **Daha sade sayfa araçları:** Açıklamanın altındaki 10 kontrol küçük düğmelere toplandı (↻ Yeniden, Daha basit, Daha fazla örnek, 🔊 Oku, 🔗 Bağlantılar, 🧮 Sayılarla çöz). "Sayılarla çöz" kutusu yalnızca düğmeye basınca açılıyor; kişisel not katlanır bir bölümde (not varsa açık geliyor).
+- **🎯 Sınav sekmesi:** Sınav önceliği sayfanın altındaki kapalı kutudan çıkıp Açıklama / Quiz / Terimler'in yanında kendi sekmesine taşındı.
+- **Telefon:** "🃏 Kartlar" sekmelerin yanında; slayt altındaki düğmeler kısaltıldı (🚩 Tekrar, ⬇ İndir, 📋 Kopyala, 📌 Sabit) ve tek satıra sığıyor; telefonda işe yaramayan oran düğmeleri gizlendi; sekmeler yana kaydırılabiliyor.
+
 ## 2026-10-31 (3)
 
 - **İlk açılış rehberi:** Kitaplık boşken "Bugün tekrar yok / Henüz kart yok" kutuları yerine 3 adımlık bir başlangıç rehberi (anahtar al, Ayarlar'a yapıştır, slayt ekle) gösteriliyor; tamamlanan adımlar ✓ ile işaretleniyor.

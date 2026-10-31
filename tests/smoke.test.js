@@ -71,6 +71,7 @@ trailer<</Root 1 0 R>>`;
   assert.strictEqual(await pg.title(), 'Slaity');
 
   // Arrow keys: ignored inside a textarea, navigate otherwise.
+  await pg.click('#noteBox summary'); // notes sit in a collapsible section
   await pg.click('#pnote');
   await pg.keyboard.press('ArrowRight');
   assert.strictEqual(await pg.inputValue('#jump'), '1', 'arrow in textarea keeps page');
@@ -117,6 +118,7 @@ trailer<</Root 1 0 R>>`;
 
   // Full storage shows a warning.
   await pg.evaluate(() => { Storage.prototype.setItem = () => { throw new DOMException('full', 'QuotaExceededError'); }; });
+  await pg.evaluate(() => { document.getElementById('noteBox').open = true; });
   await pg.fill('#pnote', 'x');
   await pg.waitForTimeout(600);
   assert.strictEqual(await pg.$eval('#stWarn', (e) => e.hidden), false, 'storage warning shown');
