@@ -65,6 +65,7 @@ const answers = {
   assert.match(await pg.textContent('#out'), /Soru biçimi tanınmadı[\s\S]*sadece bir başlık var/);
 
   // Terms: "Terim:" in lower case, Markdown, and " - " instead of "|".
+  await pg.click('#moreBtn'); // Terimler lives in the "⋯" menu
   await pg.click('#tT');
   await pg.click('#again');
   await pg.waitForTimeout(500);
@@ -72,8 +73,7 @@ const answers = {
   assert.match(await pg.textContent('#out'), /Faiz — Paranın kirası · Borcun bedeli\./);
 
   // Exam priority: "Öncelik:" in lower case with Markdown.
-  await pg.click('#tE');
-  await pg.click('#exm summary');
+  await pg.click('#tS');
   await pg.click('#pRun');
   await pg.waitForTimeout(3500);
   assert.match(await pg.textContent('#pstat'), /Yüksek 2/);

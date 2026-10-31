@@ -21,7 +21,7 @@ const swap = (from, to) => {
   if (!html.includes(from)) throw new Error('not found in index.html: ' + from);
   html = html.split(from).join(to);
 };
-swap('<script defer src="vendor/pdfjs/pdf.min.js"></script>', '<script src="vendor/capacitor.js"></script>\n<script defer src="vendor/pdfjs/pdf.min.js"></script>');
+swap('<script>\n(function(){', '<script src="vendor/capacitor.js"></script>\n<script>\n(function(){');
 swap('<link rel="manifest" href="manifest.webmanifest">\n', '');
 fs.writeFileSync(path.join(WWW, 'index.html'), html);
 console.log('www/ built');

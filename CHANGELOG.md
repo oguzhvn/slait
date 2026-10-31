@@ -1,5 +1,12 @@
 # Değişiklik geçmişi
 
+## 2026-10-31 (4)
+
+- **Yeni, sade tasarım:** İnce üst çubuk (logo, ders adı, Kitaplık / Ekle / Ayarlar simgeleri); solda slayt, sağda açıklama paneli. Panelde tek seçim çubuğu (Açıklama · Quiz · Kartlar · Sınav), yeniden üret (↻) ve ikincil işlemlerin toplandığı tek "⋯" menüsü (daha basit anlat, daha fazla örnek, sayılarla çöz, terimler, sesli oku, bağlantılar, kendi notum, tekrar listesi, notları indir/kopyala). Soru kutusu panelin altında sabit. Emoji etiketler yerine çizgi simgeler.
+- **Yatay kullanım öncelikli:** Telefon yan tutulduğunda slayt ve açıklama yan yana, ikisi de kendi içinde kayıyor. Ana ekran uygulaması (PWA) ve APK yatay açılıyor; tarayıcıda telefon dik tutulursa "yan çevir" önerisi çıkıyor. iPad dik tutulduğunda slayt üstte, açıklama altta.
+- Quiz ve Terimler açıldığında içerik yoksa kendiliğinden hazırlanıyor. "Otomatik" ve "Tanılama" Ayarlar'a taşındı.
+- **Hız:** pdf.js ve KaTeX ilk ihtiyaçta yükleniyor. Lighthouse (telefon): performans, erişilebilirlik, en iyi uygulamalar ve SEO 100; en büyük içerik 4,9 sn → 1,4 sn.
+
 ## 2026-10-31 (3)
 
 - **İlk açılış rehberi:** Kitaplık boşken "Bugün tekrar yok / Henüz kart yok" kutuları yerine 3 adımlık bir başlangıç rehberi (anahtar al, Ayarlar'a yapıştır, slayt ekle) gösteriliyor; tamamlanan adımlar ✓ ile işaretleniyor.
