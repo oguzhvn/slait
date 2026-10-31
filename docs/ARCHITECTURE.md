@@ -28,6 +28,19 @@ Sayfa içinde gezinme `go(i)` üzerinden yapılır; zaten açık olan sayfaya gi
 - **Önbellek dostu sıra:** Görsel her istekte metinden önce gelir, ardından sabit rol metni gelir. Aynı sayfadaki açıklama, quiz, terim ve sorular böylece aynı başlangıcı paylaşır; sağlayıcı bu ortak kısmı önbellekten sayabilir.
 - **Sınav önceliği:** Talimatlar ve sınav metni her sayfada birebir aynı başlangıçta (`head`), sayfa metni en sonda gönderilir.
 
+## Model cevabını ayrıştırma
+
+İstemler sabit etiketler ister, ama ekran modelin bunlara birebir uymasına güvenmez:
+
+| Ne | Tanınanlar | Hiçbiri tanınmazsa |
+|---|---|---|
+| Açıklama (`splitHead`, `fmt`) | Büyük/küçük harf, `**`/`##`/madde işareti, iki noktasız başlık, İngilizce başlıklar (`HEADS`) | Metin tek paragraf olarak gösterilir |
+| Quiz (`parseQuiz`) | `SORU`/`Question`/`Q1`, numaralı liste, aynı satırda `Cevap:`; etiketli quiz'de etiketsiz devam eden numara | `rawView` ham metni bir notla gösterir |
+| Terimler (`parseGloss`) | `TERİM`/`Terim`/`Term`, `\|` yerine ` - ` ayırıcı | `rawView` |
+| Sınav önceliği | `Öncelik`/`Priority`, `High/Medium/Low` | Sayfa analiz edilmemiş sayılır |
+
+Aynı `splitHead` Word dışa aktarımında, sesli okumada ve "diğer slaytlarla bağlantı"da da kullanılır. Örnekler `tests/format.test.js`'te.
+
 ## Formüller
 
 İstemler formülleri `\( … \)` ve `\[ … \]` ile istemeye ayarlıdır (`MATH`). `$` kullanılmaz, çünkü finans metinlerinde para birimi olarak geçer. `math(el)` cevap tamamlandıktan sonra KaTeX auto-render çalıştırır; akış sırasında ham metin görünür.

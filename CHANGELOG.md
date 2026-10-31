@@ -1,5 +1,10 @@
 # Değişiklik geçmişi
 
+## 2026-10-31 (2)
+
+- **Biçim dayanıklılığı:** Model istenen etiketlere uymasa da ekran bozulmuyor. Küçük harf, Markdown (`**`, `##`, madde işareti), İngilizce başlıklar, numaralı quiz'ler, küçük harfli "Terim:" ve "Öncelik:" tanınıyor; hiçbir yapı yoksa cevap boş kalmak yerine düz metin olarak gösteriliyor.
+- **Düzeltme:** Görsel desteklemeyen bir modelde açıklama ve soru aynı anda gönderilince ikincisi metne geçmek yerine hata veriyordu.
+
 ## 2026-10-31
 
 - **Güvenlik:** Kötü niyetli bir PDF'in sayfada kod çalıştırabildiği pdf.js açığı (GHSA-wgrm-67xf-hhpq) `isEvalSupported: false` ile kapatıldı. KaTeX 0.16.9 → 0.19.1 (6 güvenlik uyarısı giderildi).
