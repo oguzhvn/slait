@@ -9,7 +9,7 @@ Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz 
 - Üst çubuk (`header.top`): logo, `#deckTitle`, Kitaplık / Ekle / Ayarlar simgeleri. Ayarlar paneli (`#set`) yalnızca açıkken görünür.
 - `main#app`: solda `#slideCard` (slayt panele sığar; `setZoom` 1'de genişlik boş bırakılır, iki parmakla yakınlaştırmada genişler), sağda `#panel` (seçim çubuğu `.seg`, kayan `.pbody`, altta sabit soru kutusu `#askRow`).
 - İkincil işlemler "⋯" menüsünde (`#moreMenu`); durumunu kendi metniyle gösteren düğmelerde (`exp`, `cpy`, `tts`, `flag`) menü açık kalır.
-- Yerleşim: masaüstü ve yatay telefon iki sütun, her sütun kendi içinde kayar. Dik telefonda (`max-width:700px` + `portrait`) tek sütun, slayt üstte yapışkan, `#rotHint` yan çevirmeyi önerir. Alçak yatay ekranda (`max-height:500px`) boşluklar küçülür.
+- Yerleşim: masaüstü ve yatay telefon iki sütun, her sütun kendi içinde kayar. Dik tablette (iPad, `min-width:701px` + `portrait`) slayt üstte, panel altta, ikisi ekrana sığar. Dik telefonda (`max-width:700px` + `portrait`) tek sütun, slayt üstte yapışkan, `#rotHint` yan çevirmeyi önerir. Alçak yatay ekranda (`max-height:500px`) boşluklar küçülür.
 - Uygulama yatay açılır: `manifest.webmanifest` `orientation: landscape`, APK'da iş akışı `MainActivity`'ye `sensorLandscape` ekler.
 - Eski görünümün bazı kontrolleri (`zin`, `sl`, `first`, `r5050`, `pin` …) kod bağlı kalsın diye gizli bir kapta durur.
 

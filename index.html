@@ -109,6 +109,10 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
   .panel{min-height:60vh}
   .pbody{overflow:visible}
 }
+/* Dik tablet (iPad): slayt üstte, panel altta; ikisi de ekrana sığar, sayfa kaymaz. */
+@media (min-width:701px) and (orientation:portrait){
+  main{grid-template-columns:1fr;grid-template-rows:minmax(0,46%) minmax(0,1fr)}
+}
 /* Alçak yatay ekran (telefon yan): üst çubuk ve boşluklar küçülür. */
 @media (max-height:500px) and (orientation:landscape){
   .top{height:44px}

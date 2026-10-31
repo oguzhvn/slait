@@ -121,6 +121,12 @@ trailer<</Root 1 0 R>>`;
   await pg.setViewportSize({ width: 844, height: 390 });
   assert.ok(await sideBySide(), 'phone landscape: two columns');
   assert.strictEqual(await pg.evaluate(() => document.documentElement.scrollWidth), 844, 'no sideways scroll');
+  await pg.setViewportSize({ width: 768, height: 1024 });
+  const stackedFit = await pg.evaluate(() => {
+    const a = document.getElementById('slideCard').getBoundingClientRect(), b = document.getElementById('panel').getBoundingClientRect();
+    return b.top >= a.bottom - 1 && document.getElementById('askRow').getBoundingClientRect().bottom <= innerHeight;
+  });
+  assert.ok(stackedFit, 'tablet portrait: slide above panel, question box on screen');
   await pg.setViewportSize({ width: 390, height: 800 });
   assert.ok(!(await sideBySide()), 'phone portrait: stacked');
   assert.ok(await pg.isVisible('#rotHint'), 'portrait shows the rotate hint');
