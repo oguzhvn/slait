@@ -34,6 +34,9 @@ jobs:
         run: |
           npx cap add android
           cp -r android-res/. android/app/src/main/res/
+          # Slaity is meant to be used with the phone held sideways.
+          sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="sensorLandscape"/' android/app/src/main/AndroidManifest.xml
+          grep -n screenOrientation android/app/src/main/AndroidManifest.xml
           sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"$/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
 

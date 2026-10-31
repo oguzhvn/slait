@@ -2,9 +2,10 @@
 
 ## 2026-10-31 (4)
 
-- **Daha sade sayfa araçları:** Açıklamanın altındaki 10 kontrol küçük düğmelere toplandı (↻ Yeniden, Daha basit, Daha fazla örnek, 🔊 Oku, 🔗 Bağlantılar, 🧮 Sayılarla çöz). "Sayılarla çöz" kutusu yalnızca düğmeye basınca açılıyor; kişisel not katlanır bir bölümde (not varsa açık geliyor).
-- **🎯 Sınav sekmesi:** Sınav önceliği sayfanın altındaki kapalı kutudan çıkıp Açıklama / Quiz / Terimler'in yanında kendi sekmesine taşındı.
-- **Telefon:** "🃏 Kartlar" sekmelerin yanında; slayt altındaki düğmeler kısaltıldı (🚩 Tekrar, ⬇ İndir, 📋 Kopyala, 📌 Sabit) ve tek satıra sığıyor; telefonda işe yaramayan oran düğmeleri gizlendi; sekmeler yana kaydırılabiliyor.
+- **Yeni, sade tasarım:** İnce üst çubuk (logo, ders adı, Kitaplık / Ekle / Ayarlar simgeleri); solda slayt, sağda açıklama paneli. Panelde tek seçim çubuğu (Açıklama · Quiz · Kartlar · Sınav), yeniden üret (↻) ve ikincil işlemlerin toplandığı tek "⋯" menüsü (daha basit anlat, daha fazla örnek, sayılarla çöz, terimler, sesli oku, bağlantılar, kendi notum, tekrar listesi, notları indir/kopyala). Soru kutusu panelin altında sabit. Emoji etiketler yerine çizgi simgeler.
+- **Yatay kullanım öncelikli:** Telefon yan tutulduğunda slayt ve açıklama yan yana, ikisi de kendi içinde kayıyor. Ana ekran uygulaması (PWA) ve APK yatay açılıyor; tarayıcıda telefon dik tutulursa "yan çevir" önerisi çıkıyor.
+- Quiz ve Terimler açıldığında içerik yoksa kendiliğinden hazırlanıyor. "Otomatik" ve "Tanılama" Ayarlar'a taşındı.
+- **Hız:** pdf.js ve KaTeX ilk ihtiyaçta yükleniyor. Lighthouse (telefon): performans, erişilebilirlik, en iyi uygulamalar ve SEO 100; en büyük içerik 4,9 sn → 1,4 sn.
 
 ## 2026-10-31 (3)
 

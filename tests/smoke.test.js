@@ -71,7 +71,8 @@ trailer<</Root 1 0 R>>`;
   assert.strictEqual(await pg.title(), 'Slaity');
 
   // Arrow keys: ignored inside a textarea, navigate otherwise.
-  await pg.click('#noteBox summary'); // notes sit in a collapsible section
+  await pg.click('#moreBtn'); // the note opens from the "⋯" menu
+  await pg.click('#noteT');
   await pg.click('#pnote');
   await pg.keyboard.press('ArrowRight');
   assert.strictEqual(await pg.inputValue('#jump'), '1', 'arrow in textarea keeps page');
@@ -93,7 +94,7 @@ trailer<</Root 1 0 R>>`;
   await pg.click('#tE');
 
   // Notes download includes the explanation.
-  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#exp')]);
+  const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#moreBtn').then(() => pg.click('#exp'))]);
   assert.match(require('fs').readFileSync(await dl.path(), 'utf8'), /AKILDA TUT: ok/, 'explanation in notes file');
 
   // Built-in cards: new card -> show answer -> "Tekrar" requeues it, "İyi" finishes it for a day.
@@ -111,14 +112,22 @@ trailer<</Root 1 0 R>>`;
   await pg.keyboard.press('Escape');
 
   // Ratio buttons: two columns on desktop, one column on phones.
-  await pg.click('#r5050');
-  assert.strictEqual((await pg.$eval('#app', (e) => getComputedStyle(e).gridTemplateColumns)).split(' ').length, 2);
+  // Layout: slide and panel side by side on desktop and on a phone held sideways; stacked on a phone held upright.
+  const sideBySide = () => pg.evaluate(() => {
+    const a = document.getElementById('slideCard').getBoundingClientRect(), b = document.getElementById('panel').getBoundingClientRect();
+    return b.left >= a.right - 1 && Math.abs(a.top - b.top) < 2;
+  });
+  assert.ok(await sideBySide(), 'desktop: two columns');
+  await pg.setViewportSize({ width: 844, height: 390 });
+  assert.ok(await sideBySide(), 'phone landscape: two columns');
+  assert.strictEqual(await pg.evaluate(() => document.documentElement.scrollWidth), 844, 'no sideways scroll');
   await pg.setViewportSize({ width: 390, height: 800 });
-  assert.strictEqual((await pg.$eval('#app', (e) => getComputedStyle(e).gridTemplateColumns)).split(' ').length, 1);
+  assert.ok(!(await sideBySide()), 'phone portrait: stacked');
+  assert.ok(await pg.isVisible('#rotHint'), 'portrait shows the rotate hint');
 
   // Full storage shows a warning.
   await pg.evaluate(() => { Storage.prototype.setItem = () => { throw new DOMException('full', 'QuotaExceededError'); }; });
-  await pg.evaluate(() => { document.getElementById('noteBox').open = true; });
+  await pg.evaluate(() => { const nb = document.getElementById('noteBox'); nb.hidden = false; nb.open = true; });
   await pg.fill('#pnote', 'x');
   await pg.waitForTimeout(600);
   assert.strictEqual(await pg.$eval('#stWarn', (e) => e.hidden), false, 'storage warning shown');

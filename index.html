@@ -12,92 +12,127 @@
 <title>Slaity</title>
 <meta name="description" content="Ders slaytlarını yapay zekâ ile sayfa sayfa açıklayan çalışma uygulaması: açıklama, quiz, terimler, kartlar ve sınav önceliği.">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="vendor/katex/katex.min.css" media="print" onload="this.media='all'">
 <style>
-:root{--bg:#f6f6f4;--card:#fff;--tx:#1c1c1a;--mut:#6b6b66;--ac:#2f6fed;--bd:#dcdcd6;--ex:#fff6e0;--fl:#e5484d}
-@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--tx:#ececE8;--mut:#9a9a94;--ac:#6b9bff;--bd:#3a3a37;--ex:#33301f}}
+:root{--bg:#f5f6f8;--card:#fff;--tx:#14161a;--mut:#6b7280;--ac:#2f6fed;--acs:#eaf1ff;--bd:#e5e7eb;--ex:#fff8e6;--fl:#e5484d;--ok:#2f9e44}
+@media (prefers-color-scheme:dark){:root{--bg:#121316;--card:#1c1d21;--tx:#ececec;--mut:#9ca3af;--ac:#6b9bff;--acs:#1e2a44;--bd:#2c2e33;--ex:#33301f}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:var(--bg);color:var(--tx);font:16px/1.55 -apple-system,system-ui,sans-serif}
-header{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
-h1{font-size:17px;margin:0;flex:1}
-button,.btn{font:inherit;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
+html,body{height:100%}
+body{margin:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+button,.btn{font:inherit;font-size:14px;padding:8px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
 button.p,.btn.p{background:var(--ac);border-color:var(--ac);color:#fff}
 button.on{border-color:var(--ac);color:var(--ac);font-weight:600}
 button:disabled{opacity:.4}
-main{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;padding:12px;max-width:1400px;margin:auto;align-items:start}
-@media (min-width:821px){main.r50{grid-template-columns:1fr 1fr}main.r60{grid-template-columns:1.5fr 1fr}}
-main>*{min-width:0}
-@media (max-width:820px){main{grid-template-columns:1fr}}
+.ib{width:38px;height:38px;padding:0;border:0;border-radius:10px;background:transparent;display:inline-grid;place-items:center;color:var(--tx);flex:none;cursor:pointer}
+.ib:hover{background:var(--bg)}
+.ib svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.top{flex:none;height:52px;display:flex;align-items:center;gap:6px;padding:0 10px 0 14px;background:var(--card);border-bottom:1px solid var(--bd)}
+.logo{font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0}.logo b{color:var(--ac)}
+.deck{flex:1;min-width:0;margin-left:8px;color:var(--mut);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main{flex:1;min-height:0;display:grid;grid-template-columns:1.15fr 1fr;gap:12px;padding:12px;width:100%;max-width:1500px;margin:0 auto}
+main>*{min-width:0;min-height:0}
+#empty{flex:1;overflow:auto;padding:24px 12px 40px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px}
-#slideCard{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:5;max-height:calc(100vh - env(safe-area-inset-top,0px) - 16px);overflow:auto}
-#slideCard.nopin{position:static;max-height:none}
-#cvWrap{overflow:auto;-webkit-overflow-scrolling:touch;border-radius:8px;max-height:66vh;touch-action:pan-x pan-y}
-#cvWrap.zoomed{touch-action:none}
-canvas{width:100%;height:auto;display:block;background:#fff}
-.zoom{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px}
-.zoom button{padding:6px 14px;font-size:17px}
-#zlab{min-width:48px;text-align:center;color:var(--mut);font-size:13px}
-.retry{margin-top:6px;font-size:13px;padding:6px 12px}
-.nav{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px}
-.nav button{font-size:20px;padding:8px 18px}
-input[type=number]{width:64px;text-align:center}
-input[type=number],input[type=text],input[type=password],select{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
-#sl{width:100%;margin:12px 0 2px;accent-color:var(--ac)}
-#out{min-height:120px;overflow-wrap:anywhere}
-.h{font-weight:700;font-size:13px;letter-spacing:.04em;color:var(--ac);margin:14px 0 2px}
+#slideCard{display:flex;flex-direction:column;padding:10px}
+#cvWrap{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:8px;display:flex;align-items:center;justify-content:center;touch-action:pan-x pan-y}
+#cvWrap.zoomed{display:block;touch-action:none}
+canvas{display:block;max-width:100%;max-height:100%;background:#fff;border-radius:6px;box-shadow:0 0 0 1px var(--bd)}
+#cvWrap.zoomed canvas{max-width:none;max-height:none}
+.pager{flex:none;display:flex;align-items:center;justify-content:center;gap:8px;padding-top:8px}
+.pager .ib{background:var(--bg)}
+.pg{display:flex;align-items:center;gap:4px;color:var(--mut);font-size:14px}
+#jump{width:40px;padding:6px 2px;text-align:right;border:1px solid transparent;background:transparent;-moz-appearance:textfield;appearance:textfield}
+#jump::-webkit-inner-spin-button,#jump::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#jump:focus{border-color:var(--bd);background:var(--bg)}
+#chips{flex:none;justify-content:center;margin-top:4px}
+#chips button{padding:3px 9px;font-size:12px;border-color:var(--fl);color:var(--fl)}
+.panel{display:flex;flex-direction:column;padding:0}
+.phead{flex:none;display:flex;align-items:center;gap:4px;padding:10px 10px 0}
+.seg{flex:1;min-width:0;display:flex;gap:4px;padding:4px;background:var(--bg);border-radius:10px;overflow-x:auto}
+.seg button{flex:1;border:0;background:transparent;padding:7px 10px;border-radius:8px;color:var(--mut);white-space:nowrap}
+.seg button.on{background:var(--card);color:var(--tx);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.pbody{flex:1;min-height:0;overflow:auto;padding:12px 14px}
+.ask{flex:none;display:flex;gap:8px;padding:10px;border-top:1px solid var(--bd)}
+.ask input{flex:1;min-width:0}
+.ask .send{width:42px;padding:0;display:grid;place-items:center}
+.ask .send svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mwrap{position:relative}
+.menu{position:absolute;right:0;top:42px;z-index:30;max-height:calc(100vh - 110px);overflow:auto;min-width:230px;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.14);padding:6px;display:flex;flex-direction:column}
+.menu button{border:0;background:transparent;text-align:left;padding:9px 12px;border-radius:8px;font-weight:400;color:var(--tx)}
+.menu button:hover{background:var(--bg)}
+.menu button.on{color:var(--ac);font-weight:600}
+.menu hr{border:0;border-top:1px solid var(--bd);margin:4px 6px}
+input[type=number],input[type=text],input[type=password],select{font:inherit;font-size:14px;padding:9px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+#out{overflow-wrap:anywhere}
+.h{font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--ac);margin:14px 0 2px}
 .h:first-child{margin-top:0}.h.ex{color:#b7791f}
 #out p,.qa p{margin:0;white-space:pre-wrap}
-.exb{background:var(--ex);border-radius:10px;padding:10px 12px}
+.exb{background:var(--ex);border-radius:8px;padding:8px 10px}
 details{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px}
 summary{cursor:pointer;font-weight:600}
 .mut{color:var(--mut);font-size:14px}
 .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .row input[type=text]{flex:1;min-width:0}
-.qa{margin-top:12px;border-top:1px dashed var(--bd);padding-top:8px}
-.qa b{color:var(--ac)}
-#chips button{padding:4px 10px;font-size:13px;border-color:var(--fl);color:var(--fl)}
+.qa{margin-top:12px;border-top:1px solid var(--bd);padding-top:8px}
+.qa b{color:var(--ac);font-size:13px}
 label{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--mut)}
 input[type=file]{display:none}
-#set{padding:12px 14px;border-bottom:1px solid var(--bd)}
+#set:not([open]){display:none}#set>summary{display:none}
+#set{flex:none;max-height:60vh;overflow:auto;padding:12px 14px;margin:0;border:0;border-radius:0;border-bottom:1px solid var(--bd);background:var(--card)}
 #set .row{align-items:center}
 .err{color:var(--fl)}
-.term{padding:6px 0;border-bottom:1px dashed var(--bd)}
+.term{padding:6px 0;border-bottom:1px solid var(--bd)}
 .term b{color:var(--ac)}
 textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);resize:vertical;min-height:70px;margin-top:6px}
 .qrow{display:flex;gap:6px;margin-top:8px}
 .qrow button{padding:4px 10px;font-size:13px}
-.qrow button.ok{border-color:#2f9e44;color:#2f9e44;font-weight:600}
+.qrow button.ok{border-color:var(--ok);color:var(--ok);font-weight:600}
 .qrow button.bad{border-color:var(--fl);color:var(--fl);font-weight:600}
 #plist button{padding:4px 10px;font-size:13px}
+.retry{margin-top:6px;font-size:13px;padding:6px 12px}
 .lib-sec{max-width:560px;margin:0 auto 14px;text-align:left}
 .lib-sec h2{font-size:15px;margin:0 0 8px}
 .item{display:flex;gap:8px;align-items:center;margin-bottom:6px}
-.chipset button{padding:7px 12px;font-size:14px}
-.tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.tabs button{flex:none}
-@media (max-width:820px){.ratio{display:none!important}.chipset{gap:6px}.chipset button{padding:6px 9px;font-size:13px}}
-.welcome ol{padding-left:22px;margin:12px 0 0}.welcome li{margin-bottom:14px}.welcome li>div{margin-bottom:6px}.welcome li.done{color:var(--mut)}.welcome .btn{display:inline-block;text-decoration:none}
 .item div{flex:1;min-width:0;overflow-wrap:anywhere}
+.welcome ol{padding-left:22px;margin:12px 0 0}.welcome li{margin-bottom:14px}.welcome li>div{margin-bottom:6px}.welcome li.done{color:var(--mut)}.welcome .btn{display:inline-block;text-decoration:none}
 .cdf{font-size:18px;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px}
 .cdg{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
 .cdg small{color:var(--mut);font-size:12px}
-.cdg.ok{border-color:#2f9e44;color:#2f9e44}.cdg.bad{border-color:var(--fl);color:var(--fl)}
-@media (max-width:820px){#slideCard:not(.nopin){max-height:52vh}#slideCard:not(.nopin) #cvWrap{max-height:27vh}}
+.cdg.ok{border-color:var(--ok);color:var(--ok)}.cdg.bad{border-color:var(--fl);color:var(--fl)}
+#rotHint{display:none;grid-column:1/-1;text-align:center;font-size:13px;color:var(--mut);background:var(--acs);border-radius:10px;padding:8px}
+/* Dik telefon: tek sütun, sayfa kayar, slayt üstte sabit kalır; yan çevirme önerilir. */
+@media (max-width:700px) and (orientation:portrait){
+  body{display:block;overflow:auto}
+  main{display:flex;flex-direction:column;padding:10px}
+  #rotHint{display:block}
+  #slideCard{position:sticky;top:0;z-index:5;max-height:46vh}
+  .panel{min-height:60vh}
+  .pbody{overflow:visible}
+}
+/* Alçak yatay ekran (telefon yan): üst çubuk ve boşluklar küçülür. */
+@media (max-height:500px) and (orientation:landscape){
+  .top{height:44px}
+  main{padding:8px;gap:8px}
+  .card{border-radius:12px}
+  #slideCard{padding:6px}
+  .pager{padding-top:4px}.pager .ib{width:34px;height:34px}
+  .phead{padding:6px 6px 0}.seg button{padding:5px 8px}
+  .pbody{padding:8px 10px}.ask{padding:6px}
+}
 </style>
 </head>
 <body>
-<header>
-  <h1>Slaity</h1>
-  <label><input type="checkbox" id="auto" checked> Otomatik</label>
-  <button id="libBtn">📚 Kitaplığım</button>
-  <button id="gear">⚙︎ Ayarlar</button>
-  <button id="diagBtn" title="Bu cihazda neyin çalıştığını test et">🩺 Tanılama</button>
-  <label class="btn p" for="file">+ Slayt Ekle</label>
+<header class="top">
+  <h1 class="logo">Slai<b>ty</b></h1>
+  <div id="deckTitle" class="deck"></div>
+  <button id="libBtn" class="ib" title="Kitaplık" aria-label="Kitaplık"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h6"/></svg></button>
+  <button id="addBtn" class="ib" title="Slayt ekle" aria-label="Slayt ekle"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button id="gear" class="ib" title="Ayarlar" aria-label="Ayarlar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
   <input type="file" id="file" accept="application/pdf,image/*">
   <input type="file" id="bkFile" accept=".json,application/json">
 </header>
 <div id="stWarn" class="err" hidden style="padding:8px 14px;border-bottom:1px solid var(--bd);cursor:pointer" title="Gizlemek için dokun"></div>
-<details id="set" style="border:0;border-radius:0;margin:0">
+<details id="set">
   <summary>Ayarlar</summary>
   <div class="row">
     <select id="prov" aria-label="Yapay zekâ sağlayıcısı"><option value="gemini">Gemini (Google)</option><option value="custom">Özel API (OpenAI uyumlu)</option></select>
@@ -131,55 +166,67 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
     <input type="password" id="ckey" placeholder="API anahtarı" style="flex:1" autocomplete="off">
     <input type="text" id="cmodel" placeholder="Model adı, ör. gpt-4o-mini" style="flex:1" autocomplete="off">
   </div>
+  <div class="row"><label><input type="checkbox" id="auto" checked> Sayfayı açınca otomatik açıkla</label><button id="diagBtn" title="Bu cihazda neyin çalıştığını test et">Tanılama</button></div>
   <div class="mut" style="margin-top:8px">Anahtar yalnızca bu cihazın tarayıcısında saklanır ve doğrudan seçtiğin sağlayıcıya gönderilir; başka bir yere gitmez. Özel API görsel (vision) destekli olmalı, aksi halde yalnızca slayt metniyle çalışır.</div>
 </details>
 <main id="app" hidden>
+  <div id="rotHint">Daha rahat kullanım için telefonu yan çevir.</div>
   <section class="card" id="slideCard">
     <div id="cvWrap"><canvas id="cv"></canvas></div>
-    <div class="zoom"><button id="zout">−</button><span id="zlab">100%</span><button id="zin">+</button><button id="zrst">Sığdır</button></div>
-    <input type="range" id="sl" min="1" max="1" value="1">
-    <div class="nav">
-      <button id="first">«</button><button id="prev">‹</button>
-      <input type="number" id="jump" min="1" value="1" inputmode="numeric"><span id="tot" class="mut">/ 1</span>
-      <button id="next">›</button><button id="last">»</button>
+    <div class="pager">
+      <button id="prev" class="ib" title="Önceki sayfa" aria-label="Önceki sayfa"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span class="pg"><input type="number" id="jump" min="1" value="1" inputmode="numeric" aria-label="Sayfa"><span id="tot">/ 1</span></span>
+      <button id="next" class="ib" title="Sonraki sayfa" aria-label="Sonraki sayfa"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
     </div>
-    <div class="row chipset" style="justify-content:center"><button id="flag" title="Bu sayfayı aralıklı tekrar listesine ekle">🚩 Tekrar</button><button id="exp" title="Bu destenin notlarını metin dosyası olarak indir">⬇ İndir</button><button id="cpy" title="Bu destenin notlarını panoya kopyala">📋 Kopyala</button><button id="pin" class="on" title="Slaytı kaydırırken üstte sabit tut">📌 Sabit</button></div>
-    <div class="row ratio" style="justify-content:center"><span class="mut" style="align-self:center">Oran:</span><button id="r5050">50:50</button><button id="r6040">60:40</button></div>
-    <div id="chips" class="row" style="justify-content:center"></div>
+    <div id="chips" class="row"></div>
+    <!-- Eski görünümün kontrolleri: kod hâlâ bağlı, ekranda yok (iki parmakla yakınlaştırma ve ‹ › yeterli). -->
+    <div hidden><button id="zout"></button><span id="zlab"></span><button id="zin"></button><button id="zrst"></button><input type="range" id="sl" min="1" max="1" value="1"><button id="first"></button><button id="last"></button><button id="r5050"></button><button id="r6040"></button><button id="pin" class="on"></button></div>
   </section>
-  <section class="card">
-    <div id="revBar" class="exb" hidden style="margin-bottom:10px"><b>📅 Tekrar zamanı:</b> bu sayfayı hatırlıyor musun?<div class="row"><button id="rOk" class="p">Hatırladım ✓</button><button id="rNo">Unuttum ✗</button></div></div>
-    <div class="row tabs" style="margin:0 0 10px"><button id="tE" class="on">Açıklama</button><button id="tQ">Quiz</button><button id="tT">Terimler</button><button id="tS">🎯 Sınav</button><button id="cards" title="Bu destenin quiz soruları ve terimleriyle kart çalış">🃏 Kartlar</button></div>
-    <div id="pbadge" class="mut" style="margin-bottom:8px"></div>
-    <div id="pageTools">
-      <div id="out" class="mut">Açıklama burada görünecek.</div>
-      <div class="row chipset">
-        <button id="again">↻ Yeniden</button><button id="simple">Daha basit</button><button id="deep">Daha fazla örnek</button><button id="gAll" hidden>Tüm sözlük</button><button id="tts">🔊 Oku</button><button id="xlink" title="Kitaplıktaki diğer slaytlarda bu konuyla ilişkili sayfaları bul">🔗 Bağlantılar</button><button id="calcT" title="Sayfadaki formülleri adım adım çöz">🧮 Sayılarla çöz</button><button id="stop" hidden>Durdur</button>
+  <section class="card panel" id="panel">
+    <div class="phead">
+      <div class="seg" role="tablist"><button id="tE" class="on">Açıklama</button><button id="tQ">Quiz</button><button id="cards" title="Quiz soruları ve terimlerle tekrar kartları">Kartlar</button><button id="tS">Sınav</button></div>
+      <button id="again" class="ib" title="Yeniden üret" aria-label="Yeniden üret"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+      <div class="mwrap">
+        <button id="moreBtn" class="ib" title="Diğer işlemler" aria-label="Diğer işlemler"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></button>
+        <div id="moreMenu" class="menu" hidden>
+          <button id="simple">Daha basit anlat</button><button id="deep">Daha fazla örnek</button><button id="calcT">Sayılarla çöz</button><button id="tT">Terimler</button>
+          <hr><button id="tts">Sesli oku</button><button id="xlink">Diğer slaytlarla bağlantılar</button><button id="noteT">Kendi notum</button><button id="flag">Tekrar listesine ekle</button>
+          <hr><button id="exp">Notları indir</button><button id="cpy">Notları kopyala</button>
+        </div>
       </div>
-      <div id="calcRow" class="row" hidden><input type="text" id="cvals" placeholder="Kendi sayıların (isteğe bağlı): faiz %12, vade 3 yıl…" style="flex:1;min-width:0"><button id="calc" class="p">Çöz</button></div>
-      <div id="chat"></div>
-      <div class="row">
-        <input type="text" id="q" placeholder="Bu sayfa hakkında soru sor…" enterkeyhint="send">
-        <button class="p" id="ask">Sor</button>
-      </div>
-      <details id="noteBox" style="margin-top:14px">
-        <summary>✏️ Kendi notum (bu sayfa)</summary>
-        <textarea id="pnote" placeholder="Hocanın sözlü söylediklerini veya kendi notunu yaz…"></textarea>
-      </details>
     </div>
-    <div id="exm" hidden>
+    <div class="pbody">
+      <div id="revBar" class="exb" hidden style="margin-bottom:10px"><b>Tekrar zamanı:</b> bu sayfayı hatırlıyor musun?<div class="row"><button id="rOk" class="p">Hatırladım</button><button id="rNo">Unuttum</button></div></div>
+      <div id="pbadge" class="mut" style="margin-bottom:8px"></div>
+      <button id="stop" hidden style="margin-bottom:8px">Durdur</button>
+      <div id="pageTools">
+        <div id="out" class="mut">Açıklama burada görünecek.</div>
+        <div class="row"><button id="gAll" hidden>Tüm sözlük</button></div>
+        <div id="calcRow" class="row" hidden><input type="text" id="cvals" placeholder="Kendi sayıların (isteğe bağlı): faiz %12, vade 3 yıl…"><button id="calc" class="p">Çöz</button></div>
+        <div id="chat"></div>
+        <details id="noteBox" hidden style="margin-top:14px">
+          <summary>Kendi notum (bu sayfa)</summary>
+          <textarea id="pnote" placeholder="Hocanın sözlü söylediklerini veya kendi notunu yaz…"></textarea>
+        </details>
+      </div>
+      <div id="exm" hidden>
       <div class="mut">Çıkmış sorular, hocanın vurguladığı konular veya sınav kapsamını yapıştır (boş bırakabilirsin). Tüm sayfalar sınavda çıkma olasılığına göre Yüksek / Orta / Düşük diye işaretlenir. Sadece PDF'lerde ve metni olan sayfalarda çalışır.</div>
       <textarea id="exam" placeholder="Çıkmış sorular / vurgulanan konular…" style="min-height:90px"></textarea>
-      <div class="row"><button id="pRun" class="p">Tüm sayfaları analiz et</button><button id="pFlag">🔥 Yüksek öncelikliyi tekrar listesine ekle</button></div>
+      <div class="row"><button id="pRun" class="p">Tüm sayfaları analiz et</button><button id="pFlag">Yüksek öncelikli sayfaları tekrar listesine ekle</button></div>
       <div id="pstat" class="mut" style="margin-top:8px"></div>
       <div id="plist" class="row"></div>
     </div>
+    </div>
+    <div class="ask" id="askRow">
+      <input type="text" id="q" placeholder="Bu sayfa hakkında sor… (ör. daha basit anlat)" enterkeyhint="send" aria-label="Soru">
+      <button class="p send" id="ask" title="Sor" aria-label="Sor"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
   </section>
 </main>
-<div id="empty" class="mut" style="text-align:center;padding:40px 12px">Yükleniyor…</div>
+<div id="empty">Yükleniyor…</div>
 <div id="cardBox" hidden style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);overflow:auto;padding:12px">
   <div class="card" style="max-width:600px;margin:16px auto">
-    <div class="row" style="margin-top:0;justify-content:space-between;align-items:center"><b>🃏 Kartlar</b><span id="cdStat" class="mut"></span><button id="cdClose">Kapat</button></div>
+    <div class="row" style="margin-top:0;justify-content:space-between;align-items:center"><b>Kartlar</b><span id="cdStat" class="mut"></span><button id="cdClose">Kapat</button></div>
     <div class="row" style="align-items:center"><span id="cdSrc" class="mut" style="flex:1"></span><button id="cdGo" class="retry" style="margin:0">Sayfaya git</button></div>
     <div id="cdFront" class="cdf"></div>
     <div id="cdBack" class="cdf exb" hidden></div>
@@ -190,7 +237,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
 </div>
 <div id="diagBox" hidden style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);overflow:auto;padding:12px">
   <div class="card" style="max-width:600px;margin:16px auto">
-    <div class="row" style="margin-top:0;justify-content:space-between;align-items:center"><b>🩺 Tanılama</b><button id="diagClose">Kapat</button></div>
+    <div class="row" style="margin-top:0;justify-content:space-between;align-items:center"><b>Tanılama</b><button id="diagClose">Kapat</button></div>
     <div class="mut" style="margin:6px 0 10px">Bu cihazda / bu uygulamada (Coder, Safari vb.) hangi özelliklerin çalıştığını test eder.</div>
     <div id="diagOut"></div>
     <div class="row"><button id="dgDl">⬇️ İndirmeyi dene</button><button id="dgSh">📤 Paylaşmayı dene</button><button id="dgSp">🔊 Sesi dene</button></div>
@@ -198,9 +245,6 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
     <div class="row"><button id="dgCopy" class="p">Sonucu kopyala</button><button id="dgAgain">Yeniden çalıştır</button></div>
   </div>
 </div>
-<script defer src="vendor/pdfjs/pdf.min.js"></script>
-<script defer src="vendor/katex/katex.min.js"></script>
-<script defer src="vendor/katex/contrib/auto-render.min.js"></script>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
@@ -226,8 +270,16 @@ function aiReady(){return $('prov').value==='custom'?!!($('curl').value.trim()&&
   if(['key','curl','ckey','cmodel'].indexOf(id)>-1&&aiReady())$('set').open=false;
   if(['key','prov','curl','cmodel'].indexOf(id)>-1&&!$('empty').hidden)renderLibrary()}});
 $('gear').onclick=function(){$('set').open=!$('set').open};
+$('addBtn').onclick=function(){$('file').click()};
 // pdf.js loads deferred (it no longer blocks first paint); its worker is set on first use.
-function pdfLib(){if(!window.pdfjsLib)throw new Error('pdf.js yüklenemedi');if(!pdfjsLib.GlobalWorkerOptions.workerSrc)pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';return pdfjsLib}
+// pdf.js ve KaTeX ilk açılışı yavaşlatmasın diye ilk ihtiyaçta yüklenir (çevrimdışı önbellek yine baştan saklar).
+var loaded={};
+function loadScript(src){return loaded[src]||(loaded[src]=new Promise(function(res,rej){var el=document.createElement('script');el.src=src;el.onload=res;el.onerror=function(){delete loaded[src];rej(new Error(src+' yüklenemedi'))};document.head.appendChild(el)}))}
+async function pdfLib(){if(!window.pdfjsLib)await loadScript('vendor/pdfjs/pdf.min.js');if(!pdfjsLib.GlobalWorkerOptions.workerSrc)pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';return pdfjsLib}
+function katexLib(){
+  if(!loaded.css){loaded.css=1;var l=document.createElement('link');l.rel='stylesheet';l.href='vendor/katex/katex.min.css';document.head.appendChild(l)}
+  return loadScript('vendor/katex/katex.min.js').then(function(){return loadScript('vendor/katex/contrib/auto-render.min.js')});
+}
 function save(){ls('sa:'+docId,JSON.stringify(S))}
 function deckStorageKey(id){return 'sa:deck:'+id}
 function legacyStorageKey(name,blob){return 'sa:'+name+'|'+(blob?blob.size:'0')}
@@ -413,8 +465,8 @@ $('bkFile').addEventListener('change',async function(e){
 
 function backupRow(withBackup){
   var bk=document.createElement('div');bk.className='row';bk.style.cssText='justify-content:center;margin-bottom:14px';
-  if(withBackup){var bs=document.createElement('button');bs.textContent='💾 Yedekle';bs.title='Tüm slaytlar, açıklamalar, notlar ve kartlar tek dosyada';bs.onclick=function(){backupAll(bs)};bk.appendChild(bs)}
-  var br=document.createElement('label');br.className='btn';br.htmlFor='bkFile';br.textContent='📥 Yedeği geri yükle';bk.appendChild(br);
+  if(withBackup){var bs=document.createElement('button');bs.textContent='Yedekle';bs.title='Tüm slaytlar, açıklamalar, notlar ve kartlar tek dosyada';bs.onclick=function(){backupAll(bs)};bk.appendChild(bs)}
+  var br=document.createElement('label');br.className='btn';br.htmlFor='bkFile';br.textContent='Yedeği geri yükle';bk.appendChild(br);
   return bk;
 }
 function welcome(){
@@ -447,18 +499,18 @@ async function renderLibrary(){
     Object.keys(wq).forEach(function(p){var bad=0;Object.keys(wq[p]||{}).forEach(function(k){if(wq[p][k]==='bad')bad++});if(bad)weak.push({id:d.id,name:d.name,p:+p,bad:bad})});
   });
   due.sort(function(a,b){return a.due-b.due});weak.sort(function(a,b){return b.bad-a.bad});
-  $('empty').appendChild(secList('📅 Bugün tekrar'+(due.length?' ('+due.length+')':''),due.map(function(r){return {t:r.name+' · sayfa '+r.p,b:'Tekrar et',f:function(){openFromLib(r.id,r.p,'e')}}}),'Bugün tekrar yok. Slaytta 🚩 ile işaretlediğin sayfalar 1, 3, 7, 14 ve 30 gün aralıklarla burada çıkar.'));
+  $('empty').appendChild(secList('Bugün tekrar'+(due.length?' ('+due.length+')':''),due.map(function(r){return {t:r.name+' · sayfa '+r.p,b:'Tekrar et',f:function(){openFromLib(r.id,r.p,'e')}}}),'Bugün tekrar yok. Slaytta 🚩 ile işaretlediğin sayfalar 1, 3, 7, 14 ve 30 gün aralıklarla burada çıkar.'));
   var crow=[],ctot=0,cnow=Date.now();
   all.forEach(function(d){var X=d.S||{},c=cardCounts(X,cnow),tot=deckCards(X).length;if(!tot)return;ctot+=c.due+Math.min(c.nw,NEW_LIMIT);crow.push({t:d.name+' · '+c.due+' tekrar · '+c.nw+' yeni · '+tot+' kart',b:'Çalış',f:function(){study([d.id])}})});
   if(crow.length>1)crow.unshift({t:'Tüm desteler',b:'Hepsini çalış',f:function(){study(null)}});
-  $('empty').appendChild(secList('🃏 Kartlar'+(ctot?' ('+ctot+')':''),crow,'Henüz kart yok. Quiz ve Terimler sekmelerinde ürettiğin sorular ve terimler burada kart olur.'));
-  if(weak.length)$('empty').appendChild(secList('⚠️ Zayıf noktalar (quiz\'te bilemediklerin)',weak.map(function(r){return {t:r.name+' · sayfa '+r.p+' · '+r.bad+' soru',b:'Çalış',f:function(){openFromLib(r.id,r.p,'q')}}}),''));
+  $('empty').appendChild(secList('Kartlar'+(ctot?' ('+ctot+')':''),crow,'Henüz kart yok. Quiz ve Terimler sekmelerinde ürettiğin sorular ve terimler burada kart olur.'));
+  if(weak.length)$('empty').appendChild(secList('Zayıf noktalar (quiz\'te bilemediklerin)',weak.map(function(r){return {t:r.name+' · sayfa '+r.p+' · '+r.bad+' soru',b:'Çalış',f:function(){openFromLib(r.id,r.p,'q')}}}),''));
   var md=buildAllMD(all);
   if(md){
     var tb=document.createElement('div');tb.className='row';tb.style.cssText='justify-content:center;margin-bottom:14px';
-    var bw=document.createElement('button');bw.className='p';bw.textContent='📄 Tüm Notları Word Olarak İndir';bw.onclick=exportAllWord;
-    var bt=document.createElement('button');bt.textContent='📄 Tüm Notları Metin Olarak İndir';bt.onclick=exportAllText;
-    var bc=document.createElement('button');bc.textContent='📋 Tümünü kopyala';
+    var bw=document.createElement('button');bw.className='p';bw.textContent='Tüm notları Word olarak indir';bw.onclick=exportAllWord;
+    var bt=document.createElement('button');bt.textContent='Tüm notları metin olarak indir';bt.onclick=exportAllText;
+    var bc=document.createElement('button');bc.textContent='Tümünü kopyala';
     bc.onclick=function(){var old=bc.textContent;function done(ok){bc.textContent=ok?'Kopyalandı ✓':'Kopyalanamadı';setTimeout(function(){bc.textContent=old},1500)}
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(md).then(function(){done(true)}).catch(function(){done(fallbackCopy(md))});else done(fallbackCopy(md))};
     tb.appendChild(bw);tb.appendChild(bt);tb.appendChild(bc);$('empty').appendChild(tb);
@@ -489,14 +541,14 @@ async function loadDeck(blob,name,libId,courseVal,startPage,startMode){
   var requestToken=++loadToken;
   if(bctl){bctl.abort();bctl=null}cancelAI();stopSpeak();
   if(task){try{task.cancel()}catch(e){}task=null}
-  fname=name;docId=libId?'deck:'+libId:name+'|'+blob.size;curLibId=libId||null;
+  fname=name;$('deckTitle').textContent=name.replace(/\.[^.]+$/,'');docId=libId?'deck:'+libId:name+'|'+blob.size;curLibId=libId||null;
   if(courseVal!==undefined)$('course').value=courseVal||'';
   try{var saved=ls('sa:'+docId);if(!saved&&libId)saved=ls(legacyStorageKey(name,blob));S=JSON.parse(saved)||{};if(saved&&libId&&!ls('sa:'+docId))ls('sa:'+docId,saved)}catch(x){S={}}normS();
   $('exam').value=S.exam||'';
   $('empty').hidden=true;$('app').hidden=false;tok++;if(aiReady())$('set').open=false;
   try{
     pdf=null;
-    if(/pdf/i.test(blob.type)||/\.pdf$/i.test(name)){var loadedPdf=await pdfLib().getDocument({data:await blob.arrayBuffer(),isEvalSupported:false}).promise;if(requestToken!==loadToken)return;pdf=loadedPdf;total=pdf.numPages}
+    if(/pdf/i.test(blob.type)||/\.pdf$/i.test(name)){var loadedPdf=await (await pdfLib()).getDocument({data:await blob.arrayBuffer(),isEvalSupported:false}).promise;if(requestToken!==loadToken)return;pdf=loadedPdf;total=pdf.numPages}
     else{total=1;var im=new Image(),imgUrl=URL.createObjectURL(blob);try{im.src=imgUrl;await im.decode();if(requestToken!==loadToken)return;var s=Math.min(1,1400/im.width);cv.width=im.width*s;cv.height=im.height*s;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height)}finally{URL.revokeObjectURL(imgUrl)}}
     if(requestToken!==loadToken)return;
     $('sl').max=total;$('jump').max=total;$('tot').textContent='/ '+total;
@@ -566,7 +618,7 @@ function rawView(t,note){
   var p=document.createElement('p');p.textContent=String(t).split('\n').map(tidy).join('\n').trim();out.appendChild(p);
 }
 var MATH=' Formül gerekiyorsa LaTeX yaz: satır içinde \\( ... \\), ayrı satırda \\[ ... \\]. Formül için $ işareti kullanma.';
-function math(el){if(window.renderMathInElement)try{renderMathInElement(el,{delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})}catch(e){}}
+function math(el){if(!window.renderMathInElement){if(/\\[([]/.test(el.textContent))katexLib().then(function(){math(el)}).catch(function(){});return}try{renderMathInElement(el,{delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})}catch(e){}}
 function ctx(){
   var c=$('course').value.trim(),p=S.c[n-1]?S.c[n-1].replace(/\s+/g,' ').slice(0,350):'';
   var nt=S.n&&S.n[n]?S.n[n].trim().slice(0,1500):'';
@@ -585,7 +637,7 @@ function fmt(t){
 }
 function quiz(t,final){
   var items=parseQuiz(t);
-  if(!items.length){rawView(t,final?'Soru biçimi tanınmadı, cevap olduğu gibi gösteriliyor. "Yeniden" ile tekrar üretebilirsin.':'');return}
+  if(!items.length){rawView(t,final?'Soru biçimi tanınmadı, cevap olduğu gibi gösteriliyor. ↻ ile tekrar üretebilirsin.':'');return}
   out.className='';out.textContent='';
   items.forEach(function(x,i){
     var d=document.createElement('details'),s=document.createElement('summary'),a=document.createElement('p');
@@ -610,16 +662,16 @@ function gloss(t){
 }
 function renderAllGloss(){
   var a=allGloss(S.g);
-  if(!a.length){msg('Henüz terim yok. "Terimler" sekmesinde sayfa sayfa "Yeniden"e basarak terim çıkar.');return}
+  if(!a.length){msg('Henüz terim yok. Terimler ekranında her sayfa için ↻ ile terim çıkar.');return}
   out.className='';out.textContent='';
   a.forEach(function(x){var d=document.createElement('div');d.className='term';var b=document.createElement('b');b.textContent=x.t;var sp=document.createElement('span');sp.textContent=' — '+[x.k,x.d].filter(Boolean).join(' · ')+' (s. '+x.pg.join(', ')+')';d.appendChild(b);d.appendChild(sp);out.appendChild(d)});
 }
 function msg(t,e){out.className=e?'err':'mut';out.textContent=t}
 function view(){
   if(mode==='s')return;
-  if(mode==='e'){S.c[n]?fmt(S.c[n]):msg($('auto').checked?'Açıklama hazırlanıyor…':'Açıklamak için "Yeniden"e bas.')}
-  else if(mode==='q'){S.q[n]?quiz(S.q[n],true):msg('Bu sayfa için quiz yok. "Yeniden"e basarak üret.')}
-  else{S.g[n]?gloss(S.g[n]):msg('Bu sayfa için terim yok. "Yeniden"e basarak çıkar.')}
+  if(mode==='e'){S.c[n]?fmt(S.c[n]):msg($('auto').checked?'Açıklama hazırlanıyor…':'Açıklamak için ↻ düğmesine bas.')}
+  else if(mode==='q'){S.q[n]?quiz(S.q[n],true):msg($('auto').checked&&aiReady()?'Quiz hazırlanıyor…':'Bu sayfa için quiz yok. ↻ ile üret.')}
+  else{S.g[n]?gloss(S.g[n]):msg($('auto').checked&&aiReady()?'Terimler çıkarılıyor…':'Bu sayfa için terim yok. ↻ ile çıkar.')}
   math(out);
 }
 
@@ -704,7 +756,7 @@ async function run(kind,variant){
       if(page===n&&mode===kind&&tok===viewToken){draw(t,true);math(out)}}
   }catch(e){var here=page===n&&S===state&&docId===requestDoc&&tok===viewToken;
     if(!(e&&e.name==='AbortError')){if(here)msg((e&&e.m)||'Bağlantı hatası. İnterneti kontrol et.',true)}
-    else if(here&&!ctl&&mode===kind){store[page]?(draw(store[page],true),math(out)):msg('Durduruldu. Tekrar başlatmak için "Yeniden"e bas.')}}
+    else if(here&&!ctl&&mode===kind){store[page]?(draw(store[page],true),math(out)):msg('Durduruldu. Tekrar başlatmak için ↻ düğmesine bas.')}}
   if(ctl===requestCtl){ctl=null;stopBtn()}
 }
 async function follow(q,reuseDiv,opt){
@@ -733,7 +785,7 @@ async function follow(q,reuseDiv,opt){
 
 async function show(i){
   i=Math.max(1,Math.min(total,i|0||1));var my=++tok;clearTimeout(timer);cancelAI();
-  n=i;stopSpeak();ui();chat.textContent='';view();setZoom(1);$('pnote').value=S.n[n]||'';$('noteBox').open=!!S.n[n];
+  n=i;stopSpeak();ui();chat.textContent='';view();setZoom(1);$('pnote').value=S.n[n]||'';var nb=$('noteBox');nb.hidden=!S.n[n];nb.open=!!S.n[n];
   if(pdf){
     if(task){try{task.cancel()}catch(e){}}
     try{var p=await pdf.getPage(i);if(my!==tok)return;
@@ -745,13 +797,13 @@ async function show(i){
 }
 function go(i){i=Math.max(1,Math.min(total,i|0||1));if(i===n){ui();return}show(i)}
 function ui(){$('sl').value=n;$('jump').value=n;$('prev').disabled=$('first').disabled=n<=1;$('next').disabled=$('last').disabled=n>=total;
-  var fl=S.f.indexOf(n)>-1;$('flag').classList.toggle('on',fl);
+  var fl=S.f.indexOf(n)>-1;$('flag').classList.toggle('on',fl);$('flag').textContent=fl?'Tekrar listesinden çıkar':'Tekrar listesine ekle';
   var st=S.sr[n];$('revBar').hidden=!(fl&&(!st||st.due<=Date.now()));
   var pp=S.p[n];$('pbadge').textContent=pp?'🎯 Sınav önceliği: '+pp.l+(pp.r?' — '+pp.r:''):'';
   chips()}
 function chips(){var c=$('chips');c.textContent='';S.f.sort(function(a,b){return a-b}).forEach(function(p){var b=document.createElement('button');b.textContent='🚩'+p;b.onclick=function(){go(p)};c.appendChild(b)})}
 
-function setZoom(z){zoom=Math.max(1,Math.min(3,z));cv.style.width=(zoom*100)+'%';cvWrap.classList.toggle('zoomed',zoom>1);$('zlab').textContent=Math.round(zoom*100)+'%'}
+function setZoom(z){zoom=Math.max(1,Math.min(3,z));cv.style.width=zoom>1?(zoom*100)+'%':'';cvWrap.classList.toggle('zoomed',zoom>1);$('zlab').textContent=Math.round(zoom*100)+'%'}
 $('zin').onclick=function(){setZoom(zoom+0.25)};$('zout').onclick=function(){setZoom(zoom-0.25)};$('zrst').onclick=function(){setZoom(1);cvWrap.scrollLeft=0;cvWrap.scrollTop=0};
 var lastTap=0;
 cv.addEventListener('touchend',function(e){var t=Date.now();if(t-lastTap<300&&e.touches.length===0){setZoom(zoom>1?1:2);e.preventDefault()}lastTap=t},{passive:false});
@@ -767,7 +819,7 @@ $('file').addEventListener('change',async function(e){
   loadDeck(f,f.name,libId);
 });
 $('libBtn').onclick=function(){
-  try{$('app').hidden=true;$('empty').hidden=false;
+  try{$('app').hidden=true;$('empty').hidden=false;$('deckTitle').textContent='Kitaplık';
     renderLibrary().catch(function(e){$('empty').textContent='Kitaplık açılamadı: '+((e&&e.message)||e)})
   }catch(e){alert('Kitaplık düğmesi hata verdi: '+((e&&e.message)||e))}
 };
@@ -786,16 +838,22 @@ function setMode(m,noView){
   mode=m;$('tE').className=m==='e'?'on':'';$('tQ').className=m==='q'?'on':'';$('tT').className=m==='t'?'on':'';$('tS').className=m==='s'?'on':'';
   $('deep').hidden=$('simple').hidden=m!=='e';$('gAll').hidden=m!=='t';
   // "Sınav" sekmesi bütün desteyle ilgilidir; sayfa araçları o sırada gizlenir.
-  $('pageTools').hidden=m==='s';$('exm').hidden=m!=='s';
-  if(!noView)view();
+  $('pageTools').hidden=$('askRow').hidden=m==='s';$('exm').hidden=m!=='s';
+  if(!noView){view();if(((m==='q'&&!S.q[n])||(m==='t'&&!S.g[n]))&&$('auto').checked&&aiReady()&&!$('app').hidden)run(m)}
 }
 $('tE').onclick=function(){setMode('e')};
 $('tQ').onclick=function(){setMode('q')};
 $('tT').onclick=function(){setMode('t')};
 $('tS').onclick=function(){setMode('s')};
+// "⋯" menüsü: ikincil işlemler tek yerde. Durumunu metniyle gösteren düğmelerde menü açık kalır.
+var menu=$('moreMenu');
+$('moreBtn').onclick=function(e){e.stopPropagation();menu.hidden=!menu.hidden};
+document.addEventListener('click',function(e){if(!menu.hidden&&!menu.contains(e.target))menu.hidden=true});
+menu.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&['exp','cpy','tts','flag'].indexOf(b.id)<0)menu.hidden=true});
+$('noteT').onclick=function(){var nb=$('noteBox');nb.hidden=false;nb.open=true;$('pnote').focus()};
 $('calcT').onclick=function(){var r=$('calcRow');r.hidden=!r.hidden;if(!r.hidden)$('cvals').focus()};
 $('gAll').onclick=renderAllGloss;
-$('again').onclick=function(){run(mode,'normal')};$('deep').onclick=function(){run('e','deep')};$('simple').onclick=function(){run('e','simple')};
+$('again').onclick=function(){run(mode,'normal')};$('deep').onclick=function(){setMode('e');run('e','deep')};$('simple').onclick=function(){setMode('e');run('e','simple')};
 $('stop').onclick=function(){cancelAI()};
 $('flag').onclick=function(){
   var i=S.f.indexOf(n);
@@ -815,8 +873,8 @@ function buildMD(){return buildDeckMD(fname,$('course').value.trim(),S)}
 $('exp').onclick=function(){
   try{
     var b=this,old=b.textContent;
-    saveFile(new Blob([buildMD()],{type:'text/plain'}),(fname.replace(/\.[^.]+$/,'')||'notlar')+'-notlar.txt').catch(function(){b.textContent='İndirilemedi, "📋 Kopyala"yı dene';setTimeout(function(){b.textContent=old},2000)});
-  }catch(e){b.textContent='İndirilemedi, "📋 Kopyala"yı dene';setTimeout(function(){b.textContent=old},2000)}
+    saveFile(new Blob([buildMD()],{type:'text/plain'}),(fname.replace(/\.[^.]+$/,'')||'notlar')+'-notlar.txt').catch(function(){b.textContent='İndirilemedi, "Notları kopyala"yı dene';setTimeout(function(){b.textContent=old},2000)});
+  }catch(e){b.textContent='İndirilemedi, "Notları kopyala"yı dene';setTimeout(function(){b.textContent=old},2000)}
 };
 function fallbackCopy(t){var ta=document.createElement('textarea');try{ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();return document.execCommand('copy')}catch(e){return false}finally{if(ta.parentNode)ta.parentNode.removeChild(ta)}}
 $('cpy').onclick=function(){
@@ -916,14 +974,14 @@ cv.addEventListener('touchstart',function(e){if(zoom>1||e.touches.length!==1){sx
 cv.addEventListener('touchend',function(e){if(sx===null||zoom>1)return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5)go(dx<0?n+1:n-1)},{passive:true});
 // ---- sesli okuma
 var speaking=false,spk=0;
-function stopSpeak(){spk++;try{if(NATIVE)plugin('TextToSpeech').stop().catch(function(){});else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}speaking=false;var b=$('tts');if(b)b.textContent='🔊 Oku'}
+function stopSpeak(){spk++;try{if(NATIVE)plugin('TextToSpeech').stop().catch(function(){});else if(window.speechSynthesis)speechSynthesis.cancel()}catch(e){}speaking=false;var b=$('tts');if(b)b.textContent='Sesli oku'}
 var VL={tr:'tr-TR',en:'en-US',de:'de-DE',fr:'fr-FR',es:'es-ES',ru:'ru-RU',ar:'ar-SA'};
 $('tts').onclick=function(){
   var b=this;
-  if(!NATIVE&&(!window.speechSynthesis||!window.SpeechSynthesisUtterance)){b.textContent='Desteklenmiyor';setTimeout(function(){b.textContent='🔊 Oku'},1500);return}
+  if(!NATIVE&&(!window.speechSynthesis||!window.SpeechSynthesisUtterance)){b.textContent='Desteklenmiyor';setTimeout(function(){b.textContent='Sesli oku'},1500);return}
   if(speaking){stopSpeak();return}
   var t=S.c[n];
-  if(!t){b.textContent='Önce açıklama gelsin';setTimeout(function(){b.textContent='🔊 Oku'},1500);return}
+  if(!t){b.textContent='Önce açıklama gelsin';setTimeout(function(){b.textContent='Sesli oku'},1500);return}
   var HEAD={'ANA FİKİR':'Ana fikir','AÇIKLAMA':'Açıklama','ÖRNEK':'Örnek','AKILDA TUT':'Akılda tut'},tr=$('lang').value==='tr';
   var clean=t.split('\n').map(function(l){var h=splitHead(l);return h?(tr?HEAD[h[0]]+'. ':'')+h[1]:tidy(l).replace(/^\s*•\s*/,'')}).join('\n').replace(/\\[()[\]]/g,' ');
   var chunks=[],cur='';
@@ -931,13 +989,13 @@ $('tts').onclick=function(){
   if(cur.trim())chunks.push(cur);
   var code=VL[$('lang').value]||'tr-TR';
   if(NATIVE){
-    stopSpeak();var my=spk;speaking=true;b.textContent='⏹ Durdur';
+    stopSpeak();var my=spk;speaking=true;b.textContent='Okumayı durdur';
     (async function(){for(var k=0;k<chunks.length&&my===spk;k++){try{await plugin('TextToSpeech').speak({text:chunks[k].trim(),lang:code,rate:1.0})}catch(e){break}}if(my===spk)stopSpeak()})();
     return;
   }
   var vs=speechSynthesis.getVoices(),voice=null;
   for(var i=0;i<vs.length;i++)if(vs[i].lang&&vs[i].lang.toLowerCase().indexOf(code.slice(0,2))===0){voice=vs[i];break}
-  speechSynthesis.cancel();speaking=true;b.textContent='⏹ Durdur';
+  speechSynthesis.cancel();speaking=true;b.textContent='Okumayı durdur';
   chunks.forEach(function(c,k){var u=new SpeechSynthesisUtterance(c.trim());u.lang=code;if(voice)u.voice=voice;if(k===chunks.length-1){u.onend=stopSpeak;u.onerror=stopSpeak}speechSynthesis.speak(u)});
 };
 
@@ -993,7 +1051,7 @@ $('pFlag').onclick=function(){
     if(S.p[p].l==='Yüksek'&&S.f.indexOf(p)<0){S.f.push(p);S.sr[p]={step:0,due:Date.now()};add++}
   });
   save();ui();
-  $('pstat').textContent=add?add+' yüksek öncelikli sayfa tekrar listesine eklendi (Kitaplığım → Bugün tekrar).':'Eklenecek yüksek öncelikli sayfa yok (önce analiz et, ya da hepsi zaten listede).';
+  $('pstat').textContent=add?add+' yüksek öncelikli sayfa tekrar listesine eklendi (Kitaplık → Bugün tekrar).':'Eklenecek yüksek öncelikli sayfa yok (önce analiz et, ya da hepsi zaten listede).';
 };
 var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
 $('pRun').onclick=async function(){
@@ -1067,7 +1125,7 @@ async function runDiag(){
   }catch(e){dAdd('bad','Kitaplık deposu (IndexedDB)','çalışmıyor ('+((e&&e.message)||e)+'): slaytlar sadece o oturum boyunca durur')}
   try{if(navigator.storage&&navigator.storage.persisted){var pp=await navigator.storage.persisted();dAdd(pp?'ok':'warn','Kalıcı depolama izni',pp?'verilmiş':'verilmemiş (sistem yer açmak için veriyi silebilir)')}}catch(e){}
   if(!NATIVE&&'serviceWorker' in navigator)dAdd(navigator.serviceWorker.controller?'ok':'warn','Çevrimdışı kullanım',navigator.serviceWorker.controller?'hazır: uygulama internetsiz de açılır (yapay zekâ özellikleri hariç)':'henüz hazır değil: sayfayı bir kez yenile (https adresinde çalışır)');
-  dAdd(window.pdfjsLib?'ok':'bad','PDF motoru (pdf.js)',window.pdfjsLib?'yüklendi':'yüklenemedi: internet bağlantısını veya engelleyiciyi kontrol et');
+  try{await pdfLib();dAdd('ok','PDF motoru (pdf.js)','yüklendi')}catch(e){dAdd('bad','PDF motoru (pdf.js)','yüklenemedi: '+((e&&e.message)||e))}
   try{
     var ac=new AbortController(),to=setTimeout(function(){ac.abort()},8000);
     var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers:{'x-goog-api-key':'tanilama'},signal:ac.signal});clearTimeout(to);

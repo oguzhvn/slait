@@ -15,7 +15,7 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 - **Formüller:** Açıklamalardaki formüller KaTeX ile düzgün gösterilir.
 - **Kitaplık:** Eklenen dosyalar cihazda saklanır, sonra kaldığın yerden açılır.
 - **Yedekle / Geri yükle:** Kitaplıktaki tüm slaytlar, açıklamalar, notlar, quiz'ler ve kart ilerlemesi tek bir `slaity-yedek-….json` dosyasına alınır; başka bir cihazda veya adreste geri yüklenir. API anahtarları yedeğe girmez.
-- **Mobil uyumlu:** Kaydırarak sayfa geçme, iki parmakla yakınlaştırma, sabitlenebilen slayt paneli.
+- **Yatay kullanım öncelikli:** Telefon yan tutulduğunda slayt ve açıklama yan yana; kaydırarak sayfa geçme, iki parmakla yakınlaştırma. Sade arayüz: Açıklama · Quiz · Kartlar · Sınav ve tek "⋯" menüsü.
 - **Uygulama olarak:** Ana ekrana yüklenebilir (PWA) ve internetsiz açılır; Android için APK'sı da var (aşağıya bak).
 - **7 dil:** Türkçe, İngilizce, Almanca, Fransızca, İspanyolca, Rusça, Arapça.
 

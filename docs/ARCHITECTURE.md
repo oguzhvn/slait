@@ -1,8 +1,17 @@
 # Mimari
 
-Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Kütüphaneler depodaki `vendor/` klasöründen servis edilir (CDN yok): **pdf.js 3.11.174** (zorunlu, `defer` ile yüklenir, işçisi ilk kullanımda `pdfLib()` ile ayarlanır) ve **KaTeX 0.19.1** (isteğe bağlı; yüklenemezse formüller düz metin kalır). `vendor/` klasörü `npm run vendor` ile `node_modules`'tan üretilir; sürümler `vendor/VERSIONS.json`'da.
+Uygulamanın tamamı `index.html` içinde, tek bir IIFE olarak yazılmış düz JavaScript. Derleme adımı yoktur. Kütüphaneler depodaki `vendor/` klasöründen servis edilir (CDN yok): **pdf.js 3.11.174** (zorunlu) ve **KaTeX 0.19.1** (isteğe bağlı; yüklenemezse formüller düz metin kalır). İkisi de ilk açılışı yavaşlatmasın diye ilk ihtiyaçta yüklenir: `pdfLib()` ilk PDF açılınca, `katexLib()` ilk formül görününce (`loadScript`). `vendor/` klasörü `npm run vendor` ile `node_modules`'tan üretilir; sürümler `vendor/VERSIONS.json`'da.
 
 **Güvenlik:** pdf.js 4.2.67'den eski sürümlerde, hazırlanmış bir PDF yazı tipiyle sayfada JavaScript çalıştırılabiliyor (GHSA-wgrm-67xf-hhpq). Bu, localStorage'daki API anahtarını riske atar. `getDocument` bu yüzden `isEvalSupported: false` ile çağrılır; pdf.js yükseltilene kadar bu seçenek kaldırılmamalı.
+
+## Ekran düzeni
+
+- Üst çubuk (`header.top`): logo, `#deckTitle`, Kitaplık / Ekle / Ayarlar simgeleri. Ayarlar paneli (`#set`) yalnızca açıkken görünür.
+- `main#app`: solda `#slideCard` (slayt panele sığar; `setZoom` 1'de genişlik boş bırakılır, iki parmakla yakınlaştırmada genişler), sağda `#panel` (seçim çubuğu `.seg`, kayan `.pbody`, altta sabit soru kutusu `#askRow`).
+- İkincil işlemler "⋯" menüsünde (`#moreMenu`); durumunu kendi metniyle gösteren düğmelerde (`exp`, `cpy`, `tts`, `flag`) menü açık kalır.
+- Yerleşim: masaüstü ve yatay telefon iki sütun, her sütun kendi içinde kayar. Dik telefonda (`max-width:700px` + `portrait`) tek sütun, slayt üstte yapışkan, `#rotHint` yan çevirmeyi önerir. Alçak yatay ekranda (`max-height:500px`) boşluklar küçülür.
+- Uygulama yatay açılır: `manifest.webmanifest` `orientation: landscape`, APK'da iş akışı `MainActivity`'ye `sensorLandscape` ekler.
+- Eski görünümün bazı kontrolleri (`zin`, `sl`, `first`, `r5050`, `pin` …) kod bağlı kalsın diye gizli bir kapta durur.
 
 ## Akış
 

@@ -65,6 +65,7 @@ const answers = {
   assert.match(await pg.textContent('#out'), /Soru biçimi tanınmadı[\s\S]*sadece bir başlık var/);
 
   // Terms: "Terim:" in lower case, Markdown, and " - " instead of "|".
+  await pg.click('#moreBtn'); // Terimler lives in the "⋯" menu
   await pg.click('#tT');
   await pg.click('#again');
   await pg.waitForTimeout(500);
