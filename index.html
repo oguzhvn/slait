@@ -72,6 +72,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
 .lib-sec{max-width:560px;margin:0 auto 14px;text-align:left}
 .lib-sec h2{font-size:15px;margin:0 0 8px}
 .item{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.welcome ol{padding-left:22px;margin:12px 0 0}.welcome li{margin-bottom:14px}.welcome li>div{margin-bottom:6px}.welcome li.done{color:var(--mut)}.welcome .btn{display:inline-block;text-decoration:none}
 .item div{flex:1;min-width:0;overflow-wrap:anywhere}
 .cdf{font-size:18px;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px}
 .cdg{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
@@ -92,7 +93,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
   <input type="file" id="bkFile" accept=".json,application/json">
 </header>
 <div id="stWarn" class="err" hidden style="padding:8px 14px;border-bottom:1px solid var(--bd);cursor:pointer" title="Gizlemek için dokun"></div>
-<details id="set" open style="border:0;border-radius:0;margin:0">
+<details id="set" style="border:0;border-radius:0;margin:0">
   <summary>Ayarlar</summary>
   <div class="row">
     <select id="prov" aria-label="Yapay zekâ sağlayıcısı"><option value="gemini">Gemini (Google)</option><option value="custom">Özel API (OpenAI uyumlu)</option></select>
@@ -213,8 +214,12 @@ $('key').value=ls('gk');$('model').value=ls('gm')||'gemini-flash-latest';$('cour
 $('prov').value=ls('pv')||'gemini';$('curl').value=ls('cu');$('ckey').value=ls('ck');$('cmodel').value=ls('cm');
 function provUI(){var c=$('prov').value==='custom';$('gRow').hidden=c;$('cRow').hidden=!c;$('cRow2').hidden=!c}
 provUI();
-if(ls('gk')||ls('ck'))$('set').open=false;
-['key','model','course','prov','curl','ckey','cmodel','lang'].forEach(function(id){$(id).onchange=function(){ls({key:'gk',model:'gm',course:'gc',prov:'pv',curl:'cu',ckey:'ck',cmodel:'cm',lang:'gl'}[id],this.value.trim());if(id==='prov')provUI()}});
+// Yapay zekâ kullanıma hazır mı: Gemini için anahtar, özel API için adres ve model adı.
+function aiReady(){return $('prov').value==='custom'?!!($('curl').value.trim()&&$('cmodel').value.trim()):!!$('key').value.trim()}
+['key','model','course','prov','curl','ckey','cmodel','lang'].forEach(function(id){$(id).onchange=function(){ls({key:'gk',model:'gm',course:'gc',prov:'pv',curl:'cu',ckey:'ck',cmodel:'cm',lang:'gl'}[id],this.value.trim());if(id==='prov')provUI();
+  // Bağlantı ayarı tamamlanınca panel kapanır, slayta yer açılır; ilk açılış rehberi de güncellenir.
+  if(['key','curl','ckey','cmodel'].indexOf(id)>-1&&aiReady())$('set').open=false;
+  if(['key','prov','curl','cmodel'].indexOf(id)>-1&&!$('empty').hidden)renderLibrary()}});
 $('gear').onclick=function(){$('set').open=!$('set').open};
 // pdf.js loads deferred (it no longer blocks first paint); its worker is set on first use.
 function pdfLib(){if(!window.pdfjsLib)throw new Error('pdf.js yüklenemedi');if(!pdfjsLib.GlobalWorkerOptions.workerSrc)pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';return pdfjsLib}
@@ -401,10 +406,34 @@ $('bkFile').addEventListener('change',async function(e){
   renderLibrary();
 });
 
+function backupRow(withBackup){
+  var bk=document.createElement('div');bk.className='row';bk.style.cssText='justify-content:center;margin-bottom:14px';
+  if(withBackup){var bs=document.createElement('button');bs.textContent='💾 Yedekle';bs.title='Tüm slaytlar, açıklamalar, notlar ve kartlar tek dosyada';bs.onclick=function(){backupAll(bs)};bk.appendChild(bs)}
+  var br=document.createElement('label');br.className='btn';br.htmlFor='bkFile';br.textContent='📥 Yedeği geri yükle';bk.appendChild(br);
+  return bk;
+}
+function welcome(){
+  var ready=aiReady(),custom=$('prov').value==='custom',w=document.createElement('div');w.className='lib-sec card welcome';
+  var h=document.createElement('h2');h.textContent='Slaity\'ye hoş geldin';w.appendChild(h);
+  var intro=document.createElement('div');intro.className='mut';intro.textContent='Ders slaytlarını sayfa sayfa açıklar; quiz, terim ve tekrar kartı üretir. Başlamak için:';w.appendChild(intro);
+  var ol=document.createElement('ol');
+  function step(done,text,ctl){var li=document.createElement('li');if(done)li.className='done';var t=document.createElement('div');t.textContent=(done?'✓ ':'')+text;li.appendChild(t);if(ctl&&!done)li.appendChild(ctl);ol.appendChild(li)}
+  var a=document.createElement('a');a.href='https://aistudio.google.com/app/apikey';a.target='_blank';a.rel='noopener';a.className='btn';a.textContent='Anahtar al (Google AI Studio) ↗';
+  step(ready,custom?'Kullanacağın servisin API adresini ve model adını hazırla.':'Ücretsiz bir Gemini API anahtarı al: Google hesabınla gir, "Create API key"e bas, anahtarı kopyala.',custom?null:a);
+  var b=document.createElement('button');b.textContent='Ayarları aç';b.onclick=function(){$('set').open=true;var f=$(custom?'curl':'key');try{f.scrollIntoView({block:'center'})}catch(e){}f.focus()};
+  step(ready,custom?'Ayarlar\'a API adresini, anahtarını ve model adını gir.':'Anahtarı Ayarlar\'daki "Gemini API anahtarı" kutusuna yapıştır.',b);
+  var c=document.createElement('button');c.className='p';c.textContent='+ Slayt Ekle';c.onclick=function(){$('file').click()};
+  var li3=document.createElement('li');var t3=document.createElement('div');t3.textContent='Ders PDF\'ini ya da slayt görselini ekle. Açıklama kendiliğinden başlar.';li3.appendChild(t3);li3.appendChild(c);ol.appendChild(li3);
+  w.appendChild(ol);
+  return w;
+}
+
 async function renderLibrary(){
   var items;try{items=await listDecks()}catch(e){$('empty').textContent='Kitaplık okunamadı: '+((e&&e.message)||e);return}
   $('empty').innerHTML='';
   if(idbFailed){var w=document.createElement('div');w.className='mut';w.style.cssText='margin-bottom:10px';w.textContent='Bu cihazda kalıcı depolama çalışmıyor gibi görünüyor: eklediğin slaytlar sadece bu oturum (sekmeyi kapatana kadar) burada kalacak.';$('empty').appendChild(w)}
+  // İlk açılış: boş tekrar/kart kutuları yerine nasıl başlanacağı.
+  if(!items.length){$('empty').appendChild(welcome());$('empty').appendChild(backupRow(false));return}
   var all=await collectAll().catch(function(){return []});
   var due=[],weak=[],now=Date.now();
   all.forEach(function(d){
@@ -429,11 +458,7 @@ async function renderLibrary(){
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(md).then(function(){done(true)}).catch(function(){done(fallbackCopy(md))});else done(fallbackCopy(md))};
     tb.appendChild(bw);tb.appendChild(bt);tb.appendChild(bc);$('empty').appendChild(tb);
   }
-  var bk=document.createElement('div');bk.className='row';bk.style.cssText='justify-content:center;margin-bottom:14px';
-  var bs=document.createElement('button');bs.textContent='💾 Yedekle';bs.title='Tüm slaytlar, açıklamalar, notlar ve kartlar tek dosyada';bs.onclick=function(){backupAll(bs)};
-  var br=document.createElement('label');br.className='btn';br.htmlFor='bkFile';br.textContent='📥 Yedeği geri yükle';
-  bk.appendChild(bs);bk.appendChild(br);$('empty').appendChild(bk);
-  if(!items.length){var p=document.createElement('div');p.textContent='Henüz kayıtlı slayt yok. Üstten "+ Slayt Ekle" ile bir PDF/görsel seç, otomatik olarak burada saklanır.';$('empty').appendChild(p);return}
+  $('empty').appendChild(backupRow(true));
   items.sort(function(a,b){return (b.opened||b.added||0)-(a.opened||a.added||0)});
   var wrap=document.createElement('div');wrap.style.cssText='max-width:560px;margin:0 auto';
   items.forEach(function(it){
@@ -463,7 +488,7 @@ async function loadDeck(blob,name,libId,courseVal,startPage,startMode){
   if(courseVal!==undefined)$('course').value=courseVal||'';
   try{var saved=ls('sa:'+docId);if(!saved&&libId)saved=ls(legacyStorageKey(name,blob));S=JSON.parse(saved)||{};if(saved&&libId&&!ls('sa:'+docId))ls('sa:'+docId,saved)}catch(x){S={}}normS();
   $('exam').value=S.exam||'';
-  $('empty').hidden=true;$('app').hidden=false;tok++;
+  $('empty').hidden=true;$('app').hidden=false;tok++;if(aiReady())$('set').open=false;
   try{
     pdf=null;
     if(/pdf/i.test(blob.type)||/\.pdf$/i.test(name)){var loadedPdf=await pdfLib().getDocument({data:await blob.arrayBuffer(),isEvalSupported:false}).promise;if(requestToken!==loadToken)return;pdf=loadedPdf;total=pdf.numPages}

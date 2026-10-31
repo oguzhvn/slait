@@ -30,6 +30,7 @@ const answers = {
       body: 'data: ' + JSON.stringify({ choices: [{ delta: { content: answers[kind] } }] }) + '\n\ndata: [DONE]\n\n' });
   });
   await pg.goto('file://' + path.join(ROOT, 'index.html'));
+  await pg.click('#gear'); // the settings panel starts closed
   await pg.selectOption('#prov', 'custom');
   await pg.fill('#curl', 'https://api.test/v1');
   await pg.fill('#cmodel', 'm');

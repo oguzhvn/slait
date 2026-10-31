@@ -1,5 +1,10 @@
 # Değişiklik geçmişi
 
+## 2026-10-31 (3)
+
+- **İlk açılış rehberi:** Kitaplık boşken "Bugün tekrar yok / Henüz kart yok" kutuları yerine 3 adımlık bir başlangıç rehberi (anahtar al, Ayarlar'a yapıştır, slayt ekle) gösteriliyor; tamamlanan adımlar ✓ ile işaretleniyor.
+- **Ayarlar paneli yer kaplamıyor:** Panel kapalı başlıyor; bağlantı ayarı tamamlanınca ve slayt açılınca kendiliğinden kapanıyor. Anahtar eksikken yapay zekâ kullanılmak istenirse yine açılıyor.
+
 ## 2026-10-31 (2)
 
 - **Biçim dayanıklılığı:** Model istenen etiketlere uymasa da ekran bozulmuyor. Küçük harf, Markdown (`**`, `##`, madde işareti), İngilizce başlıklar, numaralı quiz'ler, küçük harfli "Terim:" ve "Öncelik:" tanınıyor; hiçbir yapı yoksa cevap boş kalmak yerine düz metin olarak gösteriliyor.
