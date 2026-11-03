@@ -93,9 +93,18 @@ trailer<</Root 1 0 R>>`;
   await pg.waitForTimeout(2500);
   await pg.click('#tE');
 
-  // Notes download includes the explanation.
+  // Notes download is a PDF (PDF readers such as Adobe do not open .txt) that holds the explanation,
+  // with Turkish letters intact. Read back with the app's own pdf.js.
   const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#moreBtn').then(() => pg.click('#exp'))]);
-  assert.match(require('fs').readFileSync(await dl.path(), 'utf8'), /AKILDA TUT: ok/, 'explanation in notes file');
+  assert.match(dl.suggestedFilename(), /^a-notlar\.pdf$/);
+  const pdfBytes = [...require('fs').readFileSync(await dl.path())];
+  const pdfText = await pg.evaluate(async (data) => {
+    const doc = await window.pdfjsLib.getDocument({ data: new Uint8Array(data), isEvalSupported: false }).promise;
+    const tc = await (await doc.getPage(1)).getTextContent();
+    return tc.items.map((i) => i.str).join(' ');
+  }, pdfBytes);
+  assert.match(pdfText, /ANA FİKİR:/, 'Turkish heading in notes PDF');
+  assert.match(pdfText, /AKILDA TUT:\s*ok/, 'explanation in notes PDF');
 
   // Built-in cards: new card -> show answer -> "Tekrar" requeues it, "İyi" finishes it for a day.
   await pg.click('#cards');

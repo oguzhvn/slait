@@ -1,5 +1,9 @@
 # Değişiklik geçmişi
 
+## 2026-11-03
+
+- **Notlar PDF olarak iniyor:** "Notları indir" ve kitaplıktaki toplu indirme artık `.txt` yerine PDF veriyor. Adobe gibi PDF okuyucular metin dosyasını açamadığı için yalnızca dosya adı görünüyordu. PDF'te Türkçe harfler doğru çıkıyor, metin seçilip aranabiliyor; Word ile indirme ve kopyalama aynen duruyor.
+
 ## 2026-10-31 (4)
 
 - **Yeni, sade tasarım:** İnce üst çubuk (logo, ders adı, Kitaplık / Ekle / Ayarlar simgeleri); solda slayt, sağda açıklama paneli. Panelde tek seçim çubuğu (Açıklama · Quiz · Kartlar · Sınav), yeniden üret (↻) ve ikincil işlemlerin toplandığı tek "⋯" menüsü (daha basit anlat, daha fazla örnek, sayılarla çöz, terimler, sesli oku, bağlantılar, kendi notum, tekrar listesi, notları indir/kopyala). Soru kutusu panelin altında sabit. Emoji etiketler yerine çizgi simgeler.
