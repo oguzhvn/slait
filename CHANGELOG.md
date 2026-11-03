@@ -1,5 +1,10 @@
 # Değişiklik geçmişi
 
+## 2026-11-03 (3)
+
+- **Kod ve formüller bozulmuyor:** `2**10`, `a__b`, `__init__` gibi yazılar artık ekranda, Word'de ve PDF'te olduğu gibi kalıyor; yalnızca eşli vurgu işaretleri (`**kalın**`, `` `kod` ``) siliniyor.
+- **PDF:** macOS'tan veya PDF'ten yapıştırılmış ayrık Türkçe harfler (s + çengel) doğru basılıyor. Bayrak ve tuş emojileri, kontrol karakterleri `?` bırakmıyor. `∈` gibi çevrilen işaretler çift boşluk bırakmıyor. Boş başlık satırları atlanıyor.
+
 ## 2026-11-03 (2)
 
 - **PDF çıktısı daha temiz:** Emoji ekleri, sıfır genişlikli karakterler ve Windows satır sonları artık `?` olarak basılmıyor. `H₂O`, `x₁`, `ﬁ` gibi biçimler sade hâline (`H2O`, `x1`, `fi`), Yunan harflerinin tamamı ve sık kullanılan matematik işaretleri okunur karşılığına çevriliyor. `__`, ters tırnak ve `####` başlık işaretleri yazdırılmıyor; Word çıktısı da aynı kuralı kullanıyor.
