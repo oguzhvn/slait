@@ -1,5 +1,11 @@
 # Değişiklik geçmişi
 
+## 2026-11-03 (2)
+
+- **PDF çıktısı daha temiz:** Emoji ekleri, sıfır genişlikli karakterler ve Windows satır sonları artık `?` olarak basılmıyor. `H₂O`, `x₁`, `ﬁ` gibi biçimler sade hâline (`H2O`, `x1`, `fi`), Yunan harflerinin tamamı ve sık kullanılan matematik işaretleri okunur karşılığına çevriliyor. `__`, ters tırnak ve `####` başlık işaretleri yazdırılmıyor; Word çıktısı da aynı kuralı kullanıyor.
+- **Düz metin indirme geri geldi:** "⋯" menüsünde "Notları metin olarak indir (.txt)", kitaplıkta "Metin (.txt)" (Anki, Obsidian gibi araçlara aktarmak için).
+- Çok uzun bağlantılar PDF oluştururken ekranı dondurmuyor.
+
 ## 2026-11-03
 
 - **Notlar PDF olarak iniyor:** "Notları indir" ve kitaplıktaki toplu indirme artık `.txt` yerine PDF veriyor. Adobe gibi PDF okuyucular metin dosyasını açamadığı için yalnızca dosya adı görünüyordu. PDF'te Türkçe harfler doğru çıkıyor, metin seçilip aranabiliyor; Word ile indirme ve kopyalama aynen duruyor.

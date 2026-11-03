@@ -10,7 +10,7 @@ Ders slaytlarını (PDF veya görsel) yapay zekâ ile sayfa sayfa açıklayan, t
 - **Soru sor:** O sayfa hakkında serbest soru, "Sayılarla çöz" ve "Diğer slaytlarla bağlantı kur".
 - **Aralıklı tekrar:** 🚩 ile işaretlenen sayfalar 1, 3, 7, 14 ve 30 gün sonra "Bugün tekrar" listesine düşer.
 - **Sınav önceliği:** Çıkmış soruları veya hocanın vurgularını yapıştır; tüm sayfalar Yüksek / Orta / Düşük olarak etiketlenir.
-- **Kişisel notlar, sesli okuma, dışa aktarma:** Notlar PDF (Adobe ve telefonun PDF görüntüleyicisi açar) veya Word olarak indirilebilir ya da kopyalanabilir.
+- **Kişisel notlar, sesli okuma, dışa aktarma:** Notlar PDF (Adobe ve telefonun PDF görüntüleyicisi açar), Word veya düz metin (.txt) olarak indirilebilir ya da kopyalanabilir.
 - **Kartlar:** Quiz soruları ve terimler otomatik olarak çalışma kartına dönüşür. Kart önce soruyu gösterir, sonra cevabı; Tekrar / Zor / İyi / Kolay değerlendirmesine göre bir sonraki tekrar zamanı belirlenir (1 dk'dan aylara). Quiz'de "Bilemedim" dediğin soru hemen tekrar sırasına girer. Kitaplıkta destelere göre bekleyen kartlar listelenir. Klavye: Boşluk = cevabı göster, 1-4 = değerlendir.
 - **Formüller:** Açıklamalardaki formüller KaTeX ile düzgün gösterilir.
 - **Kitaplık:** Eklenen dosyalar cihazda saklanır, sonra kaldığın yerden açılır.

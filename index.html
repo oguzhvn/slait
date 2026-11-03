@@ -195,7 +195,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
         <div id="moreMenu" class="menu" hidden>
           <button id="simple">Daha basit anlat</button><button id="deep">Daha fazla örnek</button><button id="calcT">Sayılarla çöz</button><button id="tT">Terimler</button>
           <hr><button id="tts">Sesli oku</button><button id="xlink">Diğer slaytlarla bağlantılar</button><button id="noteT">Kendi notum</button><button id="flag">Tekrar listesine ekle</button>
-          <hr><button id="exp">Notları indir (PDF)</button><button id="cpy">Notları kopyala</button>
+          <hr><button id="exp">Notları indir (PDF)</button><button id="expT">Notları metin olarak indir (.txt)</button><button id="cpy">Notları kopyala</button>
         </div>
       </div>
     </div>
@@ -377,15 +377,22 @@ function buildDeckMD(name,course,X){
   return md;
 }
 function buildAllMD(all){return all.map(function(d){return buildDeckMD(d.name,d.course,d.S)}).filter(Boolean).join('')}
+// Not dosyasının bir satırı: {k:'h', lv:1-3, t} başlık, {k:'kv', h, t} bölüm başlıklı satır, {k:'p', t} paragraf,
+// boşsa null. Word ve PDF dışa aktarımı aynı kuralı kullanır; Markdown işaretleri (** __ `) yazdırılmaz.
+function mdLine(l){
+  var s=l.replace(/\*\*|__|`/g,''),h=s.match(/^(#{1,6})\s+(.*)/);
+  if(h)return {k:'h',lv:Math.min(h[1].length,3),t:h[2]};
+  if(!s.trim())return null;
+  var sh=splitHead(s);
+  return sh?{k:'kv',h:sh[0],t:sh[1]}:{k:'p',t:s};
+}
 function mdToHtmlBody(md){
   var html='';
   md.split('\n').forEach(function(l){
-    var l1=l.match(/^#\s+(.*)/);if(l1){html+='<h1>'+esc(l1[1])+'</h1>';return}
-    var l2=l.match(/^##\s+(.*)/);if(l2){html+='<h2>'+esc(l2[1])+'</h2>';return}
-    var l3=l.match(/^###\s+(.*)/);if(l3){html+='<h3>'+esc(l3[1])+'</h3>';return}
-    var lb=splitHead(l);if(lb){html+='<p><b>'+esc(lb[0])+':</b> '+esc(lb[1])+'</p>';return}
-    if(!l.trim())return;
-    html+='<p>'+esc(l)+'</p>';
+    var x=mdLine(l);if(!x)return;
+    if(x.k==='h')html+='<h'+x.lv+'>'+esc(x.t)+'</h'+x.lv+'>';
+    else if(x.k==='kv')html+='<p><b>'+esc(x.h)+':</b> '+esc(x.t)+'</p>';
+    else html+='<p>'+esc(x.t)+'</p>';
   });
   return html;
 }
@@ -412,24 +419,33 @@ async function exportAllWord(){
 // 6 harf değiştirilerek (Ğ İ Ş ğ ı ş) kullanılır. Genişlikler Adobe'nin Helvetica ölçüleri (32-255).
 var PDF_W=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,350,556,350,222,556,333,1000,556,556,333,1000,667,333,1000,350,611,350,350,222,222,333,333,350,556,1000,333,1000,500,333,944,350,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,778,722,778,778,778,778,778,584,778,722,722,722,722,278,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,278,500,500],
   PDF_WB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,350,556,350,278,556,500,1000,556,556,333,1000,667,333,1000,350,611,350,350,278,278,500,500,350,556,1000,333,1000,556,333,944,350,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,778,722,778,778,778,778,778,584,778,722,722,722,722,278,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,278,556,556],
-  PDF_HI='€\0‚ƒ„…†‡ˆ‰Š‹Œ\0Ž\0\0‘’“”•–—˜™š›œ\0žŸ',PDF_TR={'Ğ':0xD0,'İ':0xDD,'Ş':0xDE,'ğ':0xF0,'ı':0xFD,'ş':0xFE},
-  PDF_SUB={'→':'->','←':'<-','⇒':'=>','⇔':'<=>','↔':'<->','≤':'<=','≥':'>=','≠':'!=','≈':'~','−':'-','∙':'·','✓':'v','✔':'v','✗':'x','🚩':'(işaretli)','α':'alfa','β':'beta','γ':'gama','δ':'delta','Δ':'Delta','σ':'sigma','Σ':'Toplam','μ':'mü','π':'pi','∑':'Toplam','√':'kök','∞':'sonsuz','\u00a0':' ','\u00ad':'','\t':'    '};
+  PDF_HI='€\0‚ƒ„…†‡ˆ‰Š‹Œ\0Ž\0\0‘’“”•–—˜™š›œ\0žŸ',PDF_TR={'Ğ':[0xD0,'Gbreve'],'İ':[0xDD,'Idotaccent'],'Ş':[0xDE,'Scedilla'],'ğ':[0xF0,'gbreve'],'ı':[0xFD,'dotlessi'],'ş':[0xFE,'scedilla']},
+  PDF_TRC=Object.keys(PDF_TR).map(function(k){return PDF_TR[k][0]}),
+  PDF_SUB={'→':'->','←':'<-','⇒':'=>','⇔':'<=>','↔':'<->','≤':'<=','≥':'>=','≠':'!=','≈':'~','−':'-','∙':'·','✓':'v','✔':'v','✗':'x','🚩':'(işaretli)','α':'alfa','β':'beta','γ':'gama','δ':'delta','ε':'epsilon','ζ':'zeta','η':'eta','θ':'teta','ι':'iota','κ':'kappa','λ':'lambda','μ':'mü','ν':'nü','ξ':'ksi','π':'pi','ρ':'ro','σ':'sigma','ς':'sigma','τ':'tau','υ':'upsilon','φ':'fi','ϕ':'fi','χ':'ki','ψ':'psi','ω':'omega','Γ':'Gama','Δ':'Delta','∆':'Delta','Θ':'Teta','Λ':'Lambda','Ξ':'Ksi','Π':'Pi','Σ':'Toplam','Φ':'Fi','Ψ':'Psi','Ω':'Omega','∑':'Toplam','∏':'Çarpım','√':'kök','∞':'sonsuz','∂':'d','∫':'integral','∈':' içinde ','∉':' içinde değil ','∝':' orantılı ','⋅':'·','′':"'",'″':'"','≡':'==','≅':'~','∼':'~','∀':'her ','∃':'var ','∅':'boş küme','\u00a0':' ','\u00ad':'','\t':'    '};
 function pdfCode(ch){
-  if(PDF_TR[ch])return PDF_TR[ch];
+  if(PDF_TR[ch])return PDF_TR[ch][0];
   var c=ch.charCodeAt(0);
   if(ch.length===1&&c>=32&&c<127)return c;
-  if(ch.length===1&&c>=0xA1&&c<=0xFF&&[0xD0,0xDD,0xDE,0xF0,0xFD,0xFE].indexOf(c)<0)return c;
+  if(ch.length===1&&c>=0xA1&&c<=0xFF&&PDF_TRC.indexOf(c)<0)return c;
   var h=PDF_HI.indexOf(ch);if(h>-1&&ch!=='\0')return 0x80+h;
   return -1;
 }
-// Metni PDF kodlarına çevirir; karşılığı olmayan karakter önce sade biçimine, olmazsa '?' olur.
+// Görünmeyen karakterler (sıfır genişlikli boşluk/birleştirici, emoji varyant seçicisi, ten rengi, \r) atılır.
+var PDF_EMOJI=/\p{Extended_Pictographic}/u;
+function pdfInvis(ch){var c=ch.codePointAt(0);return c===13||(c>=0x200B&&c<=0x200D)||c===0x2060||c===0xFEFF||(c>=0xFE00&&c<=0xFE0F)||(c>=0x1F3FB&&c<=0x1F3FF)}
+// Metni PDF kodlarına çevirir. Karşılığı olmayan karakter önce PDF_SUB'a, sonra NFKD ile sade biçimine
+// (H₂O -> H2O, ﬁ -> fi, é -> e) bakılır; emoji atılır, gerisi '?' olur.
 function pdfEnc(s){
   var out='';
   Array.from(String(s)).forEach(function(ch){
     if(PDF_SUB[ch]!==undefined){out+=PDF_SUB[ch]===''?'':pdfEnc(PDF_SUB[ch]);return}
+    if(pdfInvis(ch))return;
     var c=pdfCode(ch);
-    if(c<0){var b=ch.normalize('NFD').replace(/[\u0300-\u036f]/g,'');c=b&&b!==ch&&pdfCode(b)>-1?pdfCode(b):63}
-    out+=String.fromCharCode(c);
+    if(c>-1){out+=String.fromCharCode(c);return}
+    var b=ch.normalize('NFKD').replace(/[\u0300-\u036f]/g,'');
+    if(b&&b!==ch){out+=pdfEnc(b);return}
+    if(PDF_EMOJI.test(ch))return;
+    out+='?';
   });
   return out;
 }
@@ -448,9 +464,11 @@ function buildPDF(md,title){
       if(sp&&!cur.length)return;
       if(cw+ww>MAXW&&cur.length&&!sp){lines.push(cur);cur=[];cw=0}
       if(sp&&cw+ww>MAXW)return;
-      while(!sp&&ww>MAXW){ // tek başına sığmayan uzun kelime
-        var k=w.e.length;while(k>1&&pdfWidth(w.e.slice(0,k),w.b,size)>MAXW)k--;
-        lines.push([{e:w.e.slice(0,k),b:w.b}]);w={e:w.e.slice(k),b:w.b};ww=pdfWidth(w.e,w.b,size);
+      while(!sp&&ww>MAXW){ // tek başına sığmayan uzun kelime: sığan kadarını tek geçişte bul
+        var k=0,acc=0,cwk;
+        while(k<w.e.length&&acc+(cwk=pdfWidth(w.e[k],w.b,size))<=MAXW){acc+=cwk;k++}
+        k=Math.max(k,1);if(k===1&&!acc)acc=pdfWidth(w.e[0],w.b,size);
+        lines.push([{e:w.e.slice(0,k),b:w.b}]);w={e:w.e.slice(k),b:w.b};ww-=acc;
       }
       cur.push(w);cw+=ww;
     });
@@ -467,13 +485,11 @@ function buildPDF(md,title){
   }
   newPage();
   String(md).split('\n').forEach(function(l){
-    l=l.replace(/\*\*/g,'').replace(/\\[()[\]]/g,''); // formül işaretleri \( \) \[ \] düz metinde gereksiz
-    var h=l.match(/^(#{1,3})\s+(.*)/);
-    if(h){var lv=h[1].length;para([{t:h[2],b:true}],[18,14,12][lv-1],[0,14,8][lv-1],lv===1?6:3);return}
-    if(!l.trim())return;
-    var sh=splitHead(l);
-    if(sh)para([{t:sh[0]+': ',b:true},{t:sh[1],b:false}],11,0,5);
-    else para([{t:l,b:false}],11,0,5);
+    var x=mdLine(l.replace(/\\[()[\]]/g,'')); // formül işaretleri \( \) \[ \] düz metinde gereksiz
+    if(!x)return;
+    if(x.k==='h')para([{t:x.t,b:true}],[18,14,12][x.lv-1],[0,14,8][x.lv-1],x.lv===1?6:3);
+    else if(x.k==='kv')para([{t:x.h+': ',b:true},{t:x.t,b:false}],11,0,5);
+    else para([{t:x.t,b:false}],11,0,5);
   });
   pages.push(ops);
   // nesneler: 1 katalog, 2 sayfalar, 3-4 yazı tipleri, 5 kodlama, 6 bilgi, sonra her sayfa için içerik + sayfa
@@ -483,7 +499,7 @@ function buildPDF(md,title){
   objs[2]='<< /Type /Pages /Count '+n+' /Kids ['+kids.join(' ')+'] >>';
   objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding 5 0 R /FirstChar 32 /LastChar 255 /Widths ['+PDF_W.join(' ')+'] >>';
   objs[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding 5 0 R /FirstChar 32 /LastChar 255 /Widths ['+PDF_WB.join(' ')+'] >>';
-  objs[5]='<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [208 /Gbreve 221 /Idotaccent /Scedilla 240 /gbreve 253 /dotlessi /scedilla] >>';
+  objs[5]='<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences ['+Object.keys(PDF_TR).map(function(k){return PDF_TR[k][0]+' /'+PDF_TR[k][1]}).join(' ')+'] >>';
   var hex='FEFF';for(var j=0;j<title.length;j++)hex+=('000'+title.charCodeAt(j).toString(16).toUpperCase()).slice(-4);
   objs[6]='<< /Title <'+hex+'> /Producer (Slaity) >>';
   pages.forEach(function(p,i){
@@ -500,6 +516,10 @@ function buildPDF(md,title){
   out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R /Info 6 0 R >>\nstartxref\n'+xref+'\n%%EOF\n';
   var bytes=new Uint8Array(out.length);for(k=0;k<out.length;k++)bytes[k]=out.charCodeAt(k)&255;
   return new Blob([bytes],{type:'application/pdf'});
+}
+async function exportAllText(){
+  var md=buildAllMD(await collectAll());if(!md){alert('Henüz kaydedilmiş açıklama yok.');return}
+  try{await saveFile(new Blob([md],{type:'text/plain'}),'tum-notlarim.txt')}catch(e){alert('İndirilemedi. "Tümünü kopyala" ile panoya kopyalayıp yapıştırmayı dene.')}
 }
 async function exportAllPDF(){
   var md=buildAllMD(await collectAll());if(!md){alert('Henüz kaydedilmiş açıklama yok.');return}
@@ -608,10 +628,11 @@ async function renderLibrary(){
     var tb=document.createElement('div');tb.className='row';tb.style.cssText='justify-content:center;margin-bottom:14px';
     var bw=document.createElement('button');bw.className='p';bw.textContent='Tüm notları Word olarak indir';bw.onclick=exportAllWord;
     var bt=document.createElement('button');bt.textContent='Tüm notları PDF olarak indir';bt.onclick=exportAllPDF;
+    var bx=document.createElement('button');bx.textContent='Metin (.txt)';bx.title='Tüm notları düz metin olarak indir (Anki, Obsidian vb. için)';bx.onclick=exportAllText;
     var bc=document.createElement('button');bc.textContent='Tümünü kopyala';
     bc.onclick=function(){var old=bc.textContent;function done(ok){bc.textContent=ok?'Kopyalandı ✓':'Kopyalanamadı';setTimeout(function(){bc.textContent=old},1500)}
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(md).then(function(){done(true)}).catch(function(){done(fallbackCopy(md))});else done(fallbackCopy(md))};
-    tb.appendChild(bw);tb.appendChild(bt);tb.appendChild(bc);$('empty').appendChild(tb);
+    tb.appendChild(bw);tb.appendChild(bt);tb.appendChild(bx);tb.appendChild(bc);$('empty').appendChild(tb);
   }
   $('empty').appendChild(backupRow(true));
   items.sort(function(a,b){return (b.opened||b.added||0)-(a.opened||a.added||0)});
@@ -947,7 +968,7 @@ $('tS').onclick=function(){setMode('s')};
 var menu=$('moreMenu');
 $('moreBtn').onclick=function(e){e.stopPropagation();menu.hidden=!menu.hidden};
 document.addEventListener('click',function(e){if(!menu.hidden&&!menu.contains(e.target))menu.hidden=true});
-menu.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&['exp','cpy','tts','flag'].indexOf(b.id)<0)menu.hidden=true});
+menu.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&['exp','expT','cpy','tts','flag'].indexOf(b.id)<0)menu.hidden=true});
 $('noteT').onclick=function(){var nb=$('noteBox');nb.hidden=false;nb.open=true;$('pnote').focus()};
 $('calcT').onclick=function(){var r=$('calcRow');r.hidden=!r.hidden;if(!r.hidden)$('cvals').focus()};
 $('gAll').onclick=renderAllGloss;
@@ -968,12 +989,17 @@ function reviewAnswer(ok){
 $('rOk').onclick=function(){reviewAnswer(true)};
 $('rNo').onclick=function(){reviewAnswer(false)};
 function buildMD(){return buildDeckMD(fname,$('course').value.trim(),S)}
-$('exp').onclick=function(){
+// Açık destenin notlarını indirir; pdf: true PDF, değilse düz metin.
+function exportDeck(b,pdf){
+  var old=b.textContent,base=fname.replace(/\.[^.]+$/,'');
+  function fail(){b.textContent='İndirilemedi, "Notları kopyala"yı dene';setTimeout(function(){b.textContent=old},2000)}
   try{
-    var b=this,old=b.textContent;
-    saveFile(buildPDF(buildMD(),fname.replace(/\.[^.]+$/,'')||'Notlar'),(fname.replace(/\.[^.]+$/,'')||'notlar')+'-notlar.pdf').catch(function(){b.textContent='İndirilemedi, "Notları kopyala"yı dene';setTimeout(function(){b.textContent=old},2000)});
-  }catch(e){b.textContent='İndirilemedi, "Notları kopyala"yı dene';setTimeout(function(){b.textContent=old},2000)}
-};
+    var md=buildMD(),file=(base||'notlar')+'-notlar.'+(pdf?'pdf':'txt');
+    saveFile(pdf?buildPDF(md,base||'Notlar'):new Blob([md],{type:'text/plain'}),file).catch(fail);
+  }catch(e){fail()}
+}
+$('exp').onclick=function(){exportDeck(this,true)};
+$('expT').onclick=function(){exportDeck(this,false)};
 function fallbackCopy(t){var ta=document.createElement('textarea');try{ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();return document.execCommand('copy')}catch(e){return false}finally{if(ta.parentNode)ta.parentNode.removeChild(ta)}}
 $('cpy').onclick=function(){
   var md=buildMD(),b=this,old=b.textContent;
