@@ -56,8 +56,11 @@ Aynı `splitHead` Word ve PDF dışa aktarımında, sesli okumada ve "diğer sla
 
 - **Yazı tipi gömülmez.** PDF'in standart Helvetica ve Helvetica-Bold yazı tipleri, WinAnsi kodlamasında 6 harf Latin-5 (ISO-8859-9) konumlarına konarak (`/Differences`: Ğ İ Ş ğ ı ş) kullanılır. Dosya küçük kalır.
 - **Satır kaydırma** `PDF_W` / `PDF_WB` genişlik tablolarıyla yapılır (Adobe Helvetica ölçüleri, kod 32-255). Bu tablolar pdf.js'in standart yazı tipi ölçülerinden çıkarıldı; kodlama değişirse yeniden üretilmeli.
-- Kodlamada olmayan karakterler `PDF_SUB` ile sade karşılığa çevrilir (`→` `->`, `≥` `>=`, `α` alfa, 🚩 "(işaretli)"); o da yoksa aksan atılır, en son `?` yazılır. Formül işaretleri `\( \)` `\[ \]` silinir, LaTeX içeriği düz metin kalır.
-- `#`, `##`, `###` kalın başlık; `splitHead` ile tanınan bölüm başlıkları kalın, metin normal. A4, 56 pt kenar boşluğu, altta sayfa numarası.
+- Değiştirilen 6 harf yalnızca `PDF_TR` tablosunda tanımlı; `/Differences` dizisi ve Latin-1 dışlaması bu tablodan üretilir.
+- Kodlamada olmayan karakter sırasıyla: `PDF_SUB` ile sade karşılığa çevrilir (`→` `->`, `≥` `>=`, Yunan harfleri adlarıyla, 🚩 "(işaretli)"); görünmeyen karakterse (sıfır genişlikli boşluk, emoji varyant seçicisi, ten rengi, `\r`) atılır; NFKD ile sade biçimine indirilir (`H₂O` → `H2O`, `ﬁ` → `fi`); emojiyse atılır; en son `?` yazılır. Formül işaretleri `\( \)` `\[ \]` silinir, LaTeX içeriği düz metin kalır.
+- Satır türünü `mdLine` belirler; Word (`mdToHtmlBody`) ve PDF aynı fonksiyonu kullanır. `#`–`######` başlık (4. düzey ve altı 3. düzey gibi), `splitHead` ile tanınan bölüm başlıkları kalın, metin normal; `**`, `__` ve ters tırnak yazdırılmaz. A4, 56 pt kenar boşluğu, altta sayfa numarası.
+- Sığmayan uzun kelimeler (bağlantı, uzun formül) tek geçişte bölünür.
+- Düz metin indirme de duruyor: "⋯" menüsünde "Notları metin olarak indir (.txt)", kitaplıkta "Metin (.txt)". Örnekler `tests/pdf.test.js`'te.
 
 ## Formüller
 
