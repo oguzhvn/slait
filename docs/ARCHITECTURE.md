@@ -48,7 +48,16 @@ Sayfa içinde gezinme `go(i)` üzerinden yapılır; zaten açık olan sayfaya gi
 | Terimler (`parseGloss`) | `TERİM`/`Terim`/`Term`, `\|` yerine ` - ` ayırıcı | `rawView` |
 | Sınav önceliği | `Öncelik`/`Priority`, `High/Medium/Low` | Sayfa analiz edilmemiş sayılır |
 
-Aynı `splitHead` Word dışa aktarımında, sesli okumada ve "diğer slaytlarla bağlantı"da da kullanılır. Örnekler `tests/format.test.js`'te.
+Aynı `splitHead` Word ve PDF dışa aktarımında, sesli okumada ve "diğer slaytlarla bağlantı"da da kullanılır. Örnekler `tests/format.test.js`'te.
+
+## PDF dışa aktarım
+
+"Notları indir" ve kitaplıktaki "Tüm notları PDF olarak indir" `buildPDF(md, başlık)` ile kütüphanesiz bir PDF üretir (Adobe gibi PDF okuyucular `.txt` açmaz). Metin seçilebilir ve aranabilir.
+
+- **Yazı tipi gömülmez.** PDF'in standart Helvetica ve Helvetica-Bold yazı tipleri, WinAnsi kodlamasında 6 harf Latin-5 (ISO-8859-9) konumlarına konarak (`/Differences`: Ğ İ Ş ğ ı ş) kullanılır. Dosya küçük kalır.
+- **Satır kaydırma** `PDF_W` / `PDF_WB` genişlik tablolarıyla yapılır (Adobe Helvetica ölçüleri, kod 32-255). Bu tablolar pdf.js'in standart yazı tipi ölçülerinden çıkarıldı; kodlama değişirse yeniden üretilmeli.
+- Kodlamada olmayan karakterler `PDF_SUB` ile sade karşılığa çevrilir (`→` `->`, `≥` `>=`, `α` alfa, 🚩 "(işaretli)"); o da yoksa aksan atılır, en son `?` yazılır. Formül işaretleri `\( \)` `\[ \]` silinir, LaTeX içeriği düz metin kalır.
+- `#`, `##`, `###` kalın başlık; `splitHead` ile tanınan bölüm başlıkları kalın, metin normal. A4, 56 pt kenar boşluğu, altta sayfa numarası.
 
 ## Formüller
 
