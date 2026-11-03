@@ -380,11 +380,13 @@ function buildAllMD(all){return all.map(function(d){return buildDeckMD(d.name,d.
 // Not dosyasının bir satırı: {k:'h', lv:1-3, t} başlık, {k:'kv', h, t} bölüm başlıklı satır, {k:'p', t} paragraf,
 // boşsa null. Word ve PDF dışa aktarımı aynı kuralı kullanır; Markdown işaretleri (** __ `) yazdırılmaz.
 function mdLine(l){
-  var s=l.replace(/\*\*|__|`/g,''),h=s.match(/^(#{1,6})\s+(.*)/);
-  if(h)return {k:'h',lv:Math.min(h[1].length,3),t:h[2]};
+  var s=unMd(l),h=s.match(/^(#{1,6})\s+(.*)/);
+  if(h)return h[2].trim()?{k:'h',lv:Math.min(h[1].length,3),t:h[2]}:null;
   if(!s.trim())return null;
   var sh=splitHead(s);
-  return sh?{k:'kv',h:sh[0],t:sh[1]}:{k:'p',t:s};
+  if(!sh)return {k:'p',t:s};
+  var i=s.search(/[:：]/); // metin splitHead'in her şeyi silen kopyasından değil, s'den alınır
+  return {k:'kv',h:sh[0],t:i>-1?s.slice(i+1).trim():''};
 }
 function mdToHtmlBody(md){
   var html='';
@@ -409,10 +411,15 @@ async function saveFile(blob,filename){
   }catch(e){if(e&&e.name==='AbortError')return}
   downloadBlob(blob,filename);
 }
-async function exportAllWord(){
+// Kitaplıktan tüm notları indirir: kind 'doc' (Word), 'pdf' veya 'txt'.
+async function exportAll(kind){
   var md=buildAllMD(await collectAll());if(!md){alert('Henüz kaydedilmiş açıklama yok.');return}
+  var blob=kind==='pdf'?buildPDF(md,'Ders Notlarım'):kind==='doc'?wordBlob(md):new Blob([md],{type:'text/plain'});
+  try{await saveFile(blob,'tum-notlarim.'+kind)}catch(e){alert('İndirilemedi. "Tümünü kopyala" ile panoya kopyalayıp yapıştırmayı dene.')}
+}
+function wordBlob(md){
   var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Ders Notlarım</title></head><body>'+mdToHtmlBody(md)+'</body></html>';
-  try{await saveFile(new Blob(['﻿'+html],{type:'application/msword'}),'tum-notlarim.doc')}catch(e){alert('İndirilemedi. "Tümünü kopyala" ile panoya kopyalayıp yapıştırmayı dene.')}
+  return new Blob(['﻿'+html],{type:'application/msword'});
 }
 // ---- notlar PDF olarak: Adobe vb. PDF okuyucular .txt açmıyor. Kütüphanesiz, metni seçilebilir PDF.
 // Yazı tipi gömülmez: PDF'in standart Helvetica'sı, WinAnsi kodlamasında Latin-5 (ISO-8859-9) gibi
@@ -430,20 +437,21 @@ function pdfCode(ch){
   var h=PDF_HI.indexOf(ch);if(h>-1&&ch!=='\0')return 0x80+h;
   return -1;
 }
-// Görünmeyen karakterler (sıfır genişlikli boşluk/birleştirici, emoji varyant seçicisi, ten rengi, \r) atılır.
+// Görünmeyen karakterler atılır: kontrol karakterleri (\r, \v, \0 …; \t PDF_SUB'da boşluk olur), sıfır genişlikli
+// boşluk/birleştirici, emoji varyant seçicisi, tuş başlığı (1️⃣), ten rengi ve bayrak harfleri (🇹🇷).
 var PDF_EMOJI=/\p{Extended_Pictographic}/u;
-function pdfInvis(ch){var c=ch.codePointAt(0);return c===13||(c>=0x200B&&c<=0x200D)||c===0x2060||c===0xFEFF||(c>=0xFE00&&c<=0xFE0F)||(c>=0x1F3FB&&c<=0x1F3FF)}
+function pdfInvis(ch){var c=ch.codePointAt(0);return c<32||c===127||(c>=0x80&&c<0xA0)||c===0x20E3||(c>=0x1F1E6&&c<=0x1F1FF)||(c>=0x200B&&c<=0x200D)||c===0x2060||c===0xFEFF||(c>=0xFE00&&c<=0xFE0F)||(c>=0x1F3FB&&c<=0x1F3FF)}
 // Metni PDF kodlarına çevirir. Karşılığı olmayan karakter önce PDF_SUB'a, sonra NFKD ile sade biçimine
 // (H₂O -> H2O, ﬁ -> fi, é -> e) bakılır; emoji atılır, gerisi '?' olur.
 function pdfEnc(s){
   var out='';
-  Array.from(String(s)).forEach(function(ch){
+  Array.from(String(s).normalize('NFC')).forEach(function(ch){ // NFC: ayrık yazılmış ş/ğ/İ (s + ̧) tek harf olur
     if(PDF_SUB[ch]!==undefined){out+=PDF_SUB[ch]===''?'':pdfEnc(PDF_SUB[ch]);return}
     if(pdfInvis(ch))return;
     var c=pdfCode(ch);
     if(c>-1){out+=String.fromCharCode(c);return}
-    var b=ch.normalize('NFKD').replace(/[\u0300-\u036f]/g,'');
-    if(b&&b!==ch){out+=pdfEnc(b);return}
+    var b=ch.normalize('NFKD').replace(/\p{M}/gu,'');
+    if(b&&b!==ch){var r=pdfEnc(b);out+=r.indexOf('?')>-1&&b.indexOf('?')<0?'?':r;return} // yarım çeviri yerine tek '?'
     if(PDF_EMOJI.test(ch))return;
     out+='?';
   });
@@ -457,7 +465,8 @@ function buildPDF(md,title){
   // runs: [{t:metin,b:kalın}] -> satırlara böl, yaz
   function para(runs,size,gapBefore,gapAfter){
     var lh=size*1.38,words=[];
-    runs.forEach(function(r){String(r.t).split(/( +)/).forEach(function(w){if(w)words.push({e:pdfEnc(w),b:r.b})})});
+    // Önce kodlanır (PDF_SUB boşluk ekleyebilir), sonra boşluk dizileri tek boşluk olarak bölünür.
+    runs.forEach(function(r){pdfEnc(r.t).split(/( +)/).forEach(function(w){if(w)words.push({e:/^ +$/.test(w)?' ':w,b:r.b})})});
     var lines=[],cur=[],cw=0;
     words.forEach(function(w){
       var ww=pdfWidth(w.e,w.b,size),sp=/^ +$/.test(w.e);
@@ -516,14 +525,6 @@ function buildPDF(md,title){
   out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R /Info 6 0 R >>\nstartxref\n'+xref+'\n%%EOF\n';
   var bytes=new Uint8Array(out.length);for(k=0;k<out.length;k++)bytes[k]=out.charCodeAt(k)&255;
   return new Blob([bytes],{type:'application/pdf'});
-}
-async function exportAllText(){
-  var md=buildAllMD(await collectAll());if(!md){alert('Henüz kaydedilmiş açıklama yok.');return}
-  try{await saveFile(new Blob([md],{type:'text/plain'}),'tum-notlarim.txt')}catch(e){alert('İndirilemedi. "Tümünü kopyala" ile panoya kopyalayıp yapıştırmayı dene.')}
-}
-async function exportAllPDF(){
-  var md=buildAllMD(await collectAll());if(!md){alert('Henüz kaydedilmiş açıklama yok.');return}
-  try{await saveFile(buildPDF(md,'Ders Notlarım'),'tum-notlarim.pdf')}catch(e){alert('İndirilemedi. "Tümünü kopyala" ile panoya kopyalayıp yapıştırmayı dene.')}
 }
 
 function secList(title,rows,empty){
@@ -626,9 +627,9 @@ async function renderLibrary(){
   var md=buildAllMD(all);
   if(md){
     var tb=document.createElement('div');tb.className='row';tb.style.cssText='justify-content:center;margin-bottom:14px';
-    var bw=document.createElement('button');bw.className='p';bw.textContent='Tüm notları Word olarak indir';bw.onclick=exportAllWord;
-    var bt=document.createElement('button');bt.textContent='Tüm notları PDF olarak indir';bt.onclick=exportAllPDF;
-    var bx=document.createElement('button');bx.textContent='Metin (.txt)';bx.title='Tüm notları düz metin olarak indir (Anki, Obsidian vb. için)';bx.onclick=exportAllText;
+    var bw=document.createElement('button');bw.className='p';bw.textContent='Tüm notları Word olarak indir';bw.onclick=function(){exportAll('doc')};
+    var bt=document.createElement('button');bt.textContent='Tüm notları PDF olarak indir';bt.onclick=function(){exportAll('pdf')};
+    var bx=document.createElement('button');bx.textContent='Metin (.txt)';bx.title='Tüm notları düz metin olarak indir (Anki, Obsidian vb. için)';bx.onclick=function(){exportAll('txt')};
     var bc=document.createElement('button');bc.textContent='Tümünü kopyala';
     bc.onclick=function(){var old=bc.textContent;function done(ok){bc.textContent=ok?'Kopyalandı ✓':'Kopyalanamadı';setTimeout(function(){bc.textContent=old},1500)}
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(md).then(function(){done(true)}).catch(function(){done(fallbackCopy(md))});else done(fallbackCopy(md))};
@@ -693,9 +694,17 @@ var HEADS={'ANA FİKİR':'ANA FİKİR','ANA FIKIR':'ANA FİKİR','MAIN IDEA':'AN
   'AÇIKLAMA':'AÇIKLAMA','ACIKLAMA':'AÇIKLAMA','EXPLANATION':'AÇIKLAMA',
   'ÖRNEK':'ÖRNEK','ÖRNEKLER':'ÖRNEK','ORNEK':'ÖRNEK','EXAMPLE':'ÖRNEK','EXAMPLES':'ÖRNEK',
   'AKILDA TUT':'AKILDA TUT','AKILDA TUTULACAK':'AKILDA TUT','KEY TAKEAWAY':'AKILDA TUT','REMEMBER':'AKILDA TUT'};
-function tidy(l){return l.replace(/\*\*|__/g,'').replace(/^\s*#{1,6}\s*/,'').replace(/^(\s*)[-*]\s+/,'$1• ')}
+// Markdown vurgu işaretlerini yalnızca eşli olduklarında kaldırır: **kalın**, __kalın__ (kelime içinde değil), `kod`.
+// Tek başına ** (2**10), kelime içi __ (a__b) ve içi ASCII tanımlayıcı olan __x__ (Python'daki __init__) metinde kalır.
+function unMd(l){
+  return l.replace(/\*\*(?=\S)(.*?\S)\*\*/g,'$1')
+    .replace(/(^|[\s(])__(?=\S)(.*?\S)__(?=$|[\s.,;:!?)])/g,function(m,a,t){return /^[A-Za-z0-9_]+$/.test(t)?m:a+t})
+    .replace(/`([^`]+)`/g,'$1');
+}
+function tidy(l){return unMd(l).replace(/^\s*#{1,6}\s*/,'').replace(/^(\s*)[-*]\s+/,'$1• ')}
 // Satır bir bölüm başlığıysa [başlık, aynı satırdaki metin], değilse null.
 function splitHead(l){
+  // Yalnızca başlığı tanımak için tüm işaretler atılır; yazdırılacak metni mdLine/tidy kendisi temizler.
   var s=l.replace(/\*\*|__|`/g,'').replace(/^\s*(?:#{1,6}\s*|[-*•]\s+|\d+[.)]\s+)/,''),m=s.match(/^\s*([^:：]{2,24}?)\s*[:：]\s*(.*)$/);
   var k=(m?m[1]:s).trim(),h=HEADS[k.toLocaleUpperCase('tr')]||HEADS[k.toUpperCase()];
   return h?[h,m?m[2]:'']:null;
