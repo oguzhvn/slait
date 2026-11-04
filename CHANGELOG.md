@@ -1,8 +1,14 @@
 # Değişiklik geçmişi
 
+## 2026-11-04
+
+- **Kod ve formüller her yerde korunuyor:** Önceki sürüm `a**2 + b**2` gibi iki `**` içeren satırları hâlâ bozuyordu; bölüm başlıklı satırlarda (ör. "Açıklama:") ekranda ve sesli okumada, quiz'de, kartlarda ve terimlerde de işaretler siliniyordu. Artık vurgu ancak kelime dışında açılıp kapanırsa siliniyor, `` `kod` `` içine dokunulmuyor. `__Dikkat__` gibi ASCII harfli vurgular da artık temizleniyor; `__init__(self)` ve `__init__.py` kalıyor.
+- **İndirme:** Kitaplıktan toplu indirme dosya hazırlanırken hata olursa uyarı veriyor ve desteleri yeniden okumuyor (telefonda paylaşma menüsü daha güvenilir açılıyor).
+- **PDF:** Kalın bölüm başlığından sonra çift boşluk ve yalnız işaretten oluşan başlıklar (`## **`) artık basılmıyor.
+
 ## 2026-11-03 (3)
 
-- **Kod ve formüller bozulmuyor:** `2**10`, `a__b`, `__init__` gibi yazılar artık ekranda, Word'de ve PDF'te olduğu gibi kalıyor; yalnızca eşli vurgu işaretleri (`**kalın**`, `` `kod` ``) siliniyor.
+- **Kod ve formüller bozulmuyor:** `2**10`, `a__b`, `__init__` gibi yazılar Word'de ve PDF'te olduğu gibi kalıyor; yalnızca eşli vurgu işaretleri (`**kalın**`, `` `kod` ``) siliniyor. (Bu sürümde ekran, quiz ve iki `**` içeren satırlar hâlâ etkileniyordu; 2026-11-04'te düzeltildi.)
 - **PDF:** macOS'tan veya PDF'ten yapıştırılmış ayrık Türkçe harfler (s + çengel) doğru basılıyor. Bayrak ve tuş emojileri, kontrol karakterleri `?` bırakmıyor. `∈` gibi çevrilen işaretler çift boşluk bırakmıyor. Boş başlık satırları atlanıyor.
 
 ## 2026-11-03 (2)
