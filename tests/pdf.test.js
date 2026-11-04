@@ -8,9 +8,9 @@ const assert = require('assert');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const cut = (from, to) => { const a = html.indexOf(from), b = html.indexOf(to, a); assert.ok(a > -1 && b > a, from); return html.slice(a, b); };
-const src = cut('var HEADS=', 'var QRE=') + cut('// Not dosyasının bir satırı', 'function mdToHtmlBody') +
+const src = cut('var HEADS=', '// Yapı tanınmadığında') + cut('// Not dosyasının bir satırı', 'function mdToHtmlBody') +
   cut('// ---- notlar PDF', 'function secList(');
-const { pdfEnc, buildPDF, mdLine, PDF_W } = new Function(src + 'return {pdfEnc, buildPDF, mdLine, PDF_W};')();
+const { pdfEnc, buildPDF, mdLine, PDF_W, splitHead, tidy, parseQuiz, parseGloss } = new Function(src + 'return {pdfEnc, buildPDF, mdLine, PDF_W, splitHead, tidy, parseQuiz, parseGloss};')();
 
 // pdfEnc output is one byte per character in the PDF's encoding; decode it back for readable asserts.
 const TR = { 0xD0: 'Ğ', 0xDD: 'İ', 0xDE: 'Ş', 0xF0: 'ğ', 0xFD: 'ı', 0xFE: 'ş' };
@@ -37,7 +37,19 @@ assert.strictEqual(mdLine('   '), null);
 assert.strictEqual(mdLine('# '), null, 'empty heading is skipped');
 assert.strictEqual(mdLine('## '), null);
 assert.deepStrictEqual(mdLine('def __init__(self): return 2**10'), { k: 'p', t: 'def __init__(self): return 2**10' }, 'unpaired markers stay');
-assert.deepStrictEqual(mdLine('- **Açıklama:** a__b ve __init__ ile **kalın**'), { k: 'kv', h: 'AÇIKLAMA', t: 'a__b ve __init__ ile kalın' }, 'body text keeps code');
+assert.deepStrictEqual(mdLine('- **Açıklama:** a__b ve `__init__` ile **kalın**'), { k: 'kv', h: 'AÇIKLAMA', t: 'a__b ve __init__ ile kalın' }, 'body text keeps code');
+// Emphasis only counts when it opens and closes outside a word; code spans are left alone.
+const keep = ['a**2 + b**2 = c**2', '2**10 ve 3**4', 'def __init__(self):', '__init__.py dosyası', 'Boşluğu doldur: _____ ', '`**x**`'];
+for (const k of keep) assert.strictEqual(tidy(k), k.replace(/`/g, ''), 'kept: ' + k);
+assert.strictEqual(tidy('__Dikkat__: sınavda çıkar, __Note__ ve **NBD**’nin'), 'Dikkat: sınavda çıkar, Note ve NBD’nin');
+assert.strictEqual(tidy('**kalın** metin (**parantez**)'), 'kalın metin (parantez)');
+assert.deepStrictEqual(mdLine('## **'), null, 'marker-only heading is skipped');
+// The text after a section heading keeps code on screen (fmt), in speech and in exports.
+assert.deepStrictEqual(splitHead('**AÇIKLAMA:** Python’da `__init__` ve 2**10 = 1024'), ['AÇIKLAMA', 'Python’da __init__ ve 2**10 = 1024']);
+assert.deepStrictEqual(splitHead('Akılda tut'), ['AKILDA TUT', '']);
+// Quiz and glossary keep code too.
+assert.deepStrictEqual(parseQuiz('**SORU 1:** Python’da 2**10 kaçtır?\n**CEVAP:** 1024, `__len__` değil'), [{ q: 'Python’da 2**10 kaçtır?', a: '1024, __len__ değil' }]);
+assert.deepStrictEqual(parseGloss('- **Terim:** a**2 | kare | a**2 + b**2 toplamında'), [{ t: 'a**2', k: 'kare', d: 'a**2 + b**2 toplamında' }]);
 
 (async () => {
   // pdf.js warns that the optional 'canvas' module is missing; only text is read here, so hide that.
@@ -45,7 +57,7 @@ assert.deepStrictEqual(mdLine('- **Açıklama:** a__b ve __init__ ile **kalın**
   console.warn = console.log = () => {};
   const pdfjs = require('pdfjs-dist/legacy/build/pdf.js');
   console.warn = warn; console.log = log;
-  const md = '# Finans — Ders 3\n\n## Sayfa 1 🚩\n\n**AKILDA TUT:** \\(NBD=\\sum C_t\\) λ\r\n\n#### Dördüncü düzey\n\n__önemli__ `kod`\n\n# \n\nx ∈ A\n\ndef __init__(self): return 2**10\n\n' +
+  const md = '# Finans — Ders 3\n\n## Sayfa 1 🚩\n\n**AKILDA TUT:** \\(NBD=\\sum C_t\\) λ\r\n\n#### Dördüncü düzey\n\n__önemli__ `kod`\n\n# \n\nx ∈ A\n\nAKILDA TUT: ∈ işareti aitliktir\n\ndef __init__(self): return 2**10\n\n' +
     'https://ornek.com/' + 'x'.repeat(20000) + '\n\n' + Array.from({ length: 80 }, (_, i) => 'Satır ' + (i + 1) + ' ığüşöç İĞÜŞÖÇ').join('\n');
   const bytes = new Uint8Array(await buildPDF(md, 'Finans — Ders 3 ığş').arrayBuffer());
   const raw = Buffer.from(bytes).toString('latin1');
@@ -60,6 +72,8 @@ assert.deepStrictEqual(mdLine('- **Açıklama:** a__b ve __init__ ile **kalın**
   assert.ok(!/[?`]|__|\(NBD|####/.test(text.replace(/https:\/\/ornek\.com\/x+/, '').replace('def __init__(self): return 2**10', '')), 'no stray markers or ?');
   assert.ok(text.includes('def __init__(self): return 2**10'), 'code survives');
   assert.match(text, /x içinde A/, 'substitutions do not double spaces');
+  assert.match(text, /içinde işareti aitliktir/);
+  assert.ok(!/\( \) Tj(?: \/F[12] \d+ Tf)? \( \) Tj/.test(raw), 'never two space words in a row, also across bold/normal runs');
   assert.match(text, /Dördüncü düzey/);
   assert.match(text, /Satır 80 ığüşöç İĞÜŞÖÇ/);
   const info = await doc.getMetadata();
