@@ -1,5 +1,10 @@
 # Değişiklik geçmişi
 
+## 2026-11-24
+
+- **Gemini modelleri güncellendi:** Öntanımlı model artık Gemini 4 Hydrogen. Listede Gemini 3.8 Flash, hızlı ve ucuz Gemini 3.5 Flash-Lite ve en ucuz Gemini 3.1 Flash-Lite var. Eski listedeki `gemini-3-flash` Google'da hiç yoktu, `gemini-3.5-flash` ise artık 3.6'ya yönleniyordu; bu seçimler ve eski öntanımlı `gemini-flash-latest` (hâlâ Ocak 2026'daki önizleme modelini gösteriyor) kendiliğinden yeni öntanımlıya geçiyor.
+- Gemini'ye artık `temperature` gönderilmiyor (Google kullanımdan kaldırdı). Gemini 4'te açıklamalar "orta" düşünme seviyesiyle isteniyor: öntanımlı "yüksek" seviyeye göre daha hızlı.
+
 ## 2026-11-04
 
 - **Kod ve formüller her yerde korunuyor:** Önceki sürüm `a**2 + b**2` gibi iki `**` içeren satırları hâlâ bozuyordu; bölüm başlıklı satırlarda (ör. "Açıklama:") ekranda ve sesli okumada, quiz'de, kartlarda ve terimlerde de işaretler siliniyordu. Artık vurgu ancak kelime dışında açılıp kapanırsa siliniyor, `` `kod` `` içine dokunulmuyor. `__Dikkat__` gibi ASCII harfli vurgular da artık temizleniyor; `__init__(self)` ve `__init__.py` kalıyor.

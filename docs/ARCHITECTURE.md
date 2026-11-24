@@ -26,8 +26,10 @@ Sayfa içinde gezinme `go(i)` üzerinden yapılır; zaten açık olan sayfaya gi
 
 | Fonksiyon | Uç nokta | Not |
 |---|---|---|
-| `callGemini` | `generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse` | Anahtar `x-goog-api-key` başlığında |
+| `callGemini` | `generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse` | Anahtar `x-goog-api-key` başlığında. `temperature` gönderilmez (Gemini 3.6 ve sonrasında kullanılmıyor, Gemini 4'te aralık dışı değer 400 verir); Gemini 4 modellerine `thinkingLevel: medium` gider (öntanımlısı `high`, daha yavaş) |
 | `callCustom` | `{base}/chat/completions` (OpenAI uyumlu, `stream: true`) | Model görseli reddederse sayfa metniyle tekrar dener ve bunu `noVision` içinde hatırlar |
+
+**Gemini modelleri:** Seçim kutusunda Gemini 4 Hydrogen (öntanımlı, `GEMINI_DEFAULT`), Gemini 3.8 Flash, Gemini 3.5 Flash-Lite ve Gemini 3.1 Flash-Lite var (Kasım 2026, Google'ın model ve kullanımdan kaldırma sayfalarına göre). `-latest` takma adları kullanılmaz: `gemini-flash-latest` Ocak 2026'dan beri `gemini-3-flash-preview`'u gösteriyor ve değişimi önceden bildirilmiyor. Kayıtlı model listede yoksa (eski sürümlerin `gemini-flash-latest`, `gemini-3-flash`, `gemini-3.5-flash` seçimleri) `setModel` öntanımlıya geçer. Liste güncellenirken https://ai.google.dev/gemini-api/docs/deprecations sayfasına bakılmalı.
 
 İstek iptali iki ayrı `AbortController` ile yönetilir: `ctl` (açıklama/quiz/terim) ve `qctl` (sorular). `cancelAI()` ikisini birden iptal eder; sayfa veya deste değişince çağrılır. Eski bir cevabın yanlış yere yazılmasını `tok`, `loadToken`, `docId` ve `S===state` kontrolleri önler.
 
