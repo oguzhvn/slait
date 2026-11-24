@@ -51,6 +51,13 @@ const PDF = require('fs').readFileSync(path.join(__dirname, 'smoke.test.js'), 'u
   assert.ok(calls.every((x) => !JSON.stringify(x.body).includes('temperature')), 'temperature never sent');
   assert.strictEqual(await pg.evaluate(() => localStorage.getItem('gm')), 'gemini-4-hydrogen', 'choice saved');
 
+  // Gemini 2.5 Flash-Lite: Google lets only earlier users in; the error says so.
+  await pg.unroute('https://generativelanguage.googleapis.com/**');
+  await pg.route('https://generativelanguage.googleapis.com/**', (r) => r.fulfill({ status: 403, contentType: 'application/json',
+    body: JSON.stringify({ error: { message: 'Permission denied' } }) }));
+  await pg.selectOption('#model', 'gemini-2.5-flash-lite');
+  await pg.click('#again');
+  await pg.waitForFunction(() => /daha önce kullanmış/.test(document.getElementById('out').textContent));
   assert.deepStrictEqual(errors, [], 'no page errors');
   await browser.close();
   console.log('gemini test passed');

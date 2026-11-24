@@ -2,7 +2,7 @@
 
 ## 2026-11-24
 
-- **Gemini modelleri güncellendi:** Öntanımlı model artık Gemini 4 Hydrogen. Listede Gemini 3.8 Flash, hızlı ve ucuz Gemini 3.5 Flash-Lite ve en ucuz Gemini 3.1 Flash-Lite var. Eski listedeki `gemini-3-flash` Google'da hiç yoktu, `gemini-3.5-flash` ise artık 3.6'ya yönleniyordu; bu seçimler ve eski öntanımlı `gemini-flash-latest` (hâlâ Ocak 2026'daki önizleme modelini gösteriyor) kendiliğinden yeni öntanımlıya geçiyor.
+- **Gemini modelleri güncellendi:** Öntanımlı model artık Gemini 4 Hydrogen. Listede Gemini 3.8 Flash, hızlı ve ucuz Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite ve en ucuz aktif model Gemini 2.5 Flash-Lite var (girdi 0,10 $, çıktı 0,40 $ / 1 milyon token; Google bu modeli yalnızca daha önce kullanmış hesaplara açıyor). Eski listedeki `gemini-3-flash` Google'da hiç yoktu, `gemini-3.5-flash` ise artık 3.6'ya yönleniyordu; bu seçimler ve eski öntanımlı `gemini-flash-latest` (hâlâ Ocak 2026'daki önizleme modelini gösteriyor) kendiliğinden yeni öntanımlıya geçiyor.
 - Gemini'ye artık `temperature` gönderilmiyor (Google kullanımdan kaldırdı). Gemini 4'te açıklamalar "orta" düşünme seviyesiyle isteniyor: öntanımlı "yüksek" seviyeye göre daha hızlı.
 
 ## 2026-11-04

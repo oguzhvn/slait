@@ -159,7 +159,8 @@ textarea{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px
       <option value="gemini-4-hydrogen">Gemini 4 Hydrogen (önerilen)</option>
       <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
       <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (hızlı, ucuz)</option>
-      <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (en ucuz)</option>
+      <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (ucuz)</option>
+      <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (en ucuz; yalnızca önceden kullanan hesaplar)</option>
     </select>
   </div>
   <div id="cRow" class="row" hidden>
@@ -846,6 +847,7 @@ async function callGemini(turns,onText,signal){
     {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},signal:signal,body:JSON.stringify({contents:contents,generationConfig:geminiConfig(m)})});
   if(!r.ok){var j={};try{j=await r.json()}catch(e){}
     var em=(j.error&&j.error.message)||'';
+    if(/^gemini-2\.5/.test(m)&&[400,403,404].indexOf(r.status)>-1)em='Gemini 2.5 modellerini Google yalnızca daha önce kullanmış hesaplara açıyor; başka bir model seç. '+em;
     throw {m:r.status===429?'Ücretsiz kota/dakika limiti doldu. Birkaç saniye bekleyip tekrar dene ('+em.slice(0,120)+')':r.status===400||r.status===403?'Anahtar veya model geçersiz olabilir: '+em.slice(0,160):'Hata '+r.status+': '+em.slice(0,160)}}
   var rd=r.body.getReader(),dec=new TextDecoder(),buf='',all='';
   function consumeGeminiLine(l){if(l.indexOf('data:')!==0)return;
